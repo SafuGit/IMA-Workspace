@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Training Data Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <h2>Training Data</h2>
+                <div class="stats">
+                    <span id="itemCount">0</span> / 100 Emails
+                </div>
+                <button id="addNewBtn" class="primary-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    New Email
+                </button>
+            </div>
+            
+            <div class="list-container" id="itemList">
+                <!-- List items will be injected here by JS -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <button id="importBtn" class="secondary-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Import JSON
+                </button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+                <button id="exportBtn" class="primary-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Export JSON
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Editor -->
+        <main class="editor glass-panel">
+            <div id="emptyState" class="empty-state">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <h3>No Email Selected</h3>
+                <p>Create a new email or select one from the list to start editing.</p>
+                <button id="emptyAddNewBtn" class="primary-btn">Create First Email</button>
+            </div>
+
+            <div id="editorContent" class="editor-content hidden">
+                <div class="editor-header">
+                    <h3>Edit Entry</h3>
+                    <button id="deleteBtn" class="icon-btn danger" title="Delete Entry">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="questionInput">Question (The incoming email/scenario)</label>
+                    <textarea id="questionInput" placeholder="Paste the email or question here..." rows="6"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="answerInput">Answer (Your human-written reply)</label>
+                    <textarea id="answerInput" placeholder="Write your response in Safwan's voice..." rows="12"></textarea>
+                </div>
+
+                <div class="save-status">
+                    <span id="saveStatusIndicator" class="status-indicator"></span>
+                    <span id="saveStatusText">All changes saved to local storage</span>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="data-general.js"></script>
+    <!-- <script src="data.js"></script> -->
+    <script src="script.js"></script>
+</body>
+</html>
