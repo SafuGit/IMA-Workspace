@@ -102,11 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
             el.dataset.id = item.id;
             
             // Generate title from question or use default
-            const title = item.question.trim() ? item.question.substring(0, 40) + (item.question.length > 40 ? '...' : '') : `Email ${index + 1}`;
+            const title = item.question.trim() ? item.question.substring(0, 40) + (item.question.length > 40 ? '...' : '') : `Email`;
+            const displayTitle = `${index + 1}. ${title}`;
             const preview = item.answer.trim() ? item.answer.substring(0, 50) + '...' : 'No answer yet...';
 
             el.innerHTML = `
-                <div class="item-title">${title}</div>
+                <div class="item-title">${displayTitle}</div>
                 <div class="item-preview">${preview}</div>
             `;
             
@@ -126,10 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!item || !el) return;
 
         const index = data.findIndex(i => i.id === id);
-        const title = item.question.trim() ? item.question.substring(0, 40) + (item.question.length > 40 ? '...' : '') : `Email ${index + 1}`;
+        const title = item.question.trim() ? item.question.substring(0, 40) + (item.question.length > 40 ? '...' : '') : `Email`;
+        const displayTitle = `${index + 1}. ${title}`;
         const preview = item.answer.trim() ? item.answer.substring(0, 50) + '...' : 'No answer yet...';
 
-        el.querySelector('.item-title').textContent = title;
+        el.querySelector('.item-title').textContent = displayTitle;
         el.querySelector('.item-preview').textContent = preview;
     }
 
