@@ -15,6 +15,15 @@ Subject lines that look like they came from a colleague, not a vendor, double op
 
 **High-performing examples:** "reply rates" · "trial delays" · "hiring ops" · "employee turnover" · "Q2 forecast" · "new patients" · "personalization issue" · "second page"
 
+## Curiosity & Pattern Interrupts (Creator Outreach)
+
+Creators are bombarded daily with generic agency blasts. Words like `sponsorship`, `partnership`, `collaboration`, `brand deals` trigger instant mental deletion.
+
+Instead, use curiosity-inducing pattern interrupts that look like a peer reaching out:
+- **The simpler path / intrigue:** `the easy way`, `doing it the hard way`, `a simpler way`
+- **The casual peer ping:** `5 mins? Safwan`, `quick thought Safwan`, `2 mins?`
+- **The specific observation or problem:** `fix this one thing`, `Save this email`, `inbox noise`, or pointing to a specific workflow (`that claude workflow`)
+
 ## Capitalization: lowercase wins
 
 All-lowercase has highest open rates (Gong, 85M+ emails). Lowercase looks more personal/internal. For cold outreach specifically, lowercase beats title case.

@@ -72,6 +72,7 @@ Do not use any of the following standalone or as part of a compound word/phrase:
 - No greeting prefix before first name (no Hi, Hello, Hey)
 - No third-person company references (`[Company] offers`, `[Company] helps`)
 - No fake urgency, misleading subject lines, excessive links, or promotional formatting
+- In Subject Lines: Banned generic agency sales words (`sponsorships`, `sponsorship`, `partnerships`, `partnership`, `collab`, `collaboration`, `brand deals`, `business inquiry`). These immediately land the email in mental or automated sales spam filters.
 
 ---
 

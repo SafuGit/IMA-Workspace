@@ -126,38 +126,53 @@ TARGET VIDEO DETAILS:
 INSTRUCTIONS:
 
 ### Step 1: Find Personalization Hooks
-- Read the transcript and top comments. Look for a specific, memorable moment (a relatable joke, a visible setup quirk, a strong opinion, an aside).
+- Read the transcript and top comments. Look for a specific, memorable moment that bridges to the creator's value (e.g. how clearly they explain difficult concepts, an opinion their audience strongly agreed with, a unique workflow or aesthetic, a relatable perspective).
+- CRITICAL: Reject throwaway jokes or isolated trivia (like cookie preferences or random tangents) that cannot logically connect to why sponsors want them.
 - Apply the 'a person would know' filter: avoid dry changelog summaries or deep-cut technical jargon. Pick something a real viewer watching once would actually remember.
 - Cross-check against top comments:
   - If a top comment reacted to the same moment, tag it [comment-backed].
   - If only in transcript, tag it [transcript-only].
-- Provide 2-3 concise hook candidates written in Safwan's voice.
+- Provide 2-3 concise hook candidates written in Safwan's voice that naturally bridge into the creator's content value.
 - State which hook is recommended as the lead and why.
 
 ### Step 2: Generate Outreach Email
-- Write a short cold email from Safwan to the creator.
-- Subject line: 2-4 words, lowercase, internal-looking (e.g. 'channel sponsorships', 'quick question').
+- STRICT LENGTH: 50 to 80 words total (Absolute maximum 100 words). The shorter the email, the higher the reply rate.
+- Subject Lines (Provide 3 curiosity-driven options):
+  - BANNED: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry'. These trigger instant mental spam filters.
+  - Instead, use pattern interrupts and curiosity gaps (2-4 words, lowercase or natural capitalization):
+    * The intrigue / simpler path: e.g. 'the easy way', 'doing it the hard way', 'a simpler way'
+    * The casual peer ping: e.g. '5 mins? Safwan', 'quick thought Safwan', '2 mins?'
+    * The specific observation / problem: e.g. 'fix this one thing', 'Save this email', 'inbox noise', or referencing a specific content detail (e.g. 'that claude workflow')
+  - Provide 1 primary subject line and 2 alternative options.
 - Opener: Greet the creator by name or channel name ('Hey [Name],').
-- Hook: Open with the recommended hook smoothly, using Safwan's light humor or shared identity as a fellow tech/builder enthusiast ('Jokes aside...', 'As a fellow...').
-- Core Value: Introduce Fylint as a brokerage connecting tech/AI creators with B2B SaaS sponsors. Emphasize that there are NO upfront fees (we only get paid when a brand deal closes).
-- CTA: Low-friction peer ask ('Worth a quick chat to see if we can line up some sponsors?').
+- Paragraph 1 — Hook & Bridge (1-2 sentences, ~25-35 words):
+  - BANNED: Do NOT use an isolated joke followed by 'Jokes aside,'. That is a formulaic crutch.
+  - The hook must flow directly into the reason for reaching out. Connect what you observed in the video directly to their market value (e.g. "The way you broke down Claude workflows with zero fluff is exactly what dev/AI tooling brands look for when they sponsor creators").
+- Paragraph 2 — Understated Offer (EXACTLY 1 casual sentence, ~15-20 words):
+  - BANNED: Do NOT write a 3-4 sentence sales pitch trying to explain everything (inbox spam, vetting, rate negotiations, no upfront fees, no lock-in). It sounds too salesy and corporate.
+  - Keep it understated and peer-level: state the opportunity in one casual sentence (e.g. "I line up B2B sponsors for upcoming videos so you don't have to deal with the negotiation back-and-forth.").
+- CTA: Low-friction peer ask ('Worth a quick chat?'). The creator should be able to answer in a single word.
 - Sign-off: 'Best, Safwan | Fylint'.
 - QA: Strictly follow spam-word-checker rules (no banned hype/pressure words, no marketing fluff).
 
 ### Step 3: The Last Look
-Before finalizing the email draft, apply these eight non-mechanical checks to ensure the email gets answered:
-1. Would a stranger know I watched the video? Not "did I mention the video". Would they know.
-2. Is there one sentence here that only I could have written? If every sentence is one another drafter would also produce, the email is a template with good grammar.
-3. Does the offer follow from the hook, or merely sit under it?
-4. Would I be glad to receive this? Not flattered. Glad.
-5. Is there anything in here that is about me? Cut it.
+Before finalizing the email draft, apply these non-mechanical checks to ensure the email gets answered:
+1. Is the email between 50 and 80 words? If it is over 90 words, aggressively cut sentences.
+2. Does paragraph 2 read like a sales pitch monologue? If yes, cut it down to a single casual sentence.
+3. Would a stranger know I watched the video? Not "did I mention the video". Would they know.
+4. Does the offer follow from the hook, or merely sit under it? (If there is a disconnected joke or 'Jokes aside', rewrite so the observation bridges directly into the opportunity).
+5. Is there anything in here that is about me? Cut it. (Eliminate 'We run...', 'We handle...'; frame around what the creator gets).
 6. Could the creator reply with a single word? If answering takes thought, it will take a week.
 7. Am I claiming anything I could not defend if they asked "how do you know?" That includes the read.
 8. Does it sound composed? Composed is the tell. Read it aloud one more time.
 
 Format your response clearly with:
 ### 1. Personalization Hooks
-### 2. Outreach Draft
+### 2. Subject Line Options
+- **Primary:** ...
+- **Alternative 1:** ...
+- **Alternative 2:** ...
+### 3. Outreach Draft
 """
     return prompt.strip()
 
@@ -182,6 +197,7 @@ def generate_hook_and_email(
             "model_used": str,
             "raw_output": str,
             "hooks": str,
+            "subject_lines": str,
             "email": str,
         }
     """
@@ -215,9 +231,24 @@ def generate_hook_and_email(
 
     # Parse sections if formatted with standard headers
     hooks_section = ""
+    subject_section = ""
     email_section = ""
 
-    if "### 1. Personalization Hooks" in output and "### 2. Outreach Draft" in output:
+    if "### 3. Outreach Draft" in output:
+        parts_3 = output.split("### 3. Outreach Draft")
+        email_section = parts_3[1].strip()
+        before_draft = parts_3[0]
+
+        if "### 2. Subject Line Options" in before_draft:
+            parts_2 = before_draft.split("### 2. Subject Line Options")
+            subject_section = parts_2[1].strip()
+            if "### 1. Personalization Hooks" in parts_2[0]:
+                hooks_section = parts_2[0].split("### 1. Personalization Hooks")[1].strip()
+            else:
+                hooks_section = parts_2[0].strip()
+        else:
+            hooks_section = before_draft.strip()
+    elif "### 1. Personalization Hooks" in output and "### 2. Outreach Draft" in output:
         parts = output.split("### 2. Outreach Draft")
         hooks_part = parts[0].split("### 1. Personalization Hooks")[-1]
         hooks_section = hooks_part.strip()
@@ -232,6 +263,7 @@ def generate_hook_and_email(
         "model_used": model,
         "raw_output": output,
         "hooks": hooks_section,
+        "subject_lines": subject_section,
         "email": email_section,
     }
 
