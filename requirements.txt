@@ -1,0 +1,8 @@
+av==18.1.0
+faster_whisper==1.2.1
+google_api_python_client==2.199.0
+patchright==1.62.3
+python-dotenv==1.2.3
+Requests==2.34.2
+youtube_transcript_api==1.2.4
+yt_dlp==2026.8.19
