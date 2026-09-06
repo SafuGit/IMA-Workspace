@@ -28,6 +28,12 @@ import sys
 import os
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # ── Make sure `main-tool/` is on sys.path when run directly ─────────────────
 # This lets `from wrappers.xxx import ...` resolve whether the file is run as
 # a script (python email-generation/transcript.py) or imported as a package.
