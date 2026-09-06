@@ -1,0 +1,3 @@
+[submodule "main-tool/omar-finder"]
+	path = main-tool/omar-finder
+	url = https://github.com/OmarBaatti/aikido-ima.git
