@@ -126,13 +126,17 @@ TARGET VIDEO DETAILS:
 INSTRUCTIONS:
 
 ### Step 1: Find Personalization Hooks
-- Read the transcript and top comments. Look for a specific, memorable moment that bridges to the creator's value (e.g. how clearly they explain difficult concepts, an opinion their audience strongly agreed with, a unique workflow or aesthetic, a relatable perspective).
+- Read the timestamped transcript and top comments. Look for a specific, memorable moment that bridges to the creator's value (e.g. how clearly they explain difficult concepts, an opinion their audience strongly agreed with, a unique workflow or aesthetic, a relatable perspective).
 - CRITICAL: Reject throwaway jokes or isolated trivia (like cookie preferences or random tangents) that cannot logically connect to why sponsors want them.
 - Apply the 'a person would know' filter: avoid dry changelog summaries or deep-cut technical jargon. Pick something a real viewer watching once would actually remember.
 - Cross-check against top comments:
   - If a top comment reacted to the same moment, tag it [comment-backed].
   - If only in transcript, tag it [transcript-only].
-- Provide 2-3 concise hook candidates written in Safwan's voice that naturally bridge into the creator's content value.
+- For each of the 2-3 hook candidates, provide:
+  1. The hook copy written in Safwan's voice that naturally bridges into the creator's content value. Tagged `[comment-backed]` or `[transcript-only]`.
+  2. **Timestamp Range**: The exact time range where this occurs based on the [MM:SS] cues in the transcript (e.g. `08:14 – 08:45`).
+  3. **Clickable Link**: Direct URL with timestamp parameter: `https://www.youtube.com/watch?v={video_id}&t={{start_seconds}}s` (convert start MM:SS to total seconds, e.g. 01:26 -> 86s).
+  4. **What happens in this clip**: 1-2 plain, factual sentences describing what the creator physically demonstrates or says at that moment. (Safwan hasn't watched the whole video himself — this gives him instant clarity so he never sounds like he's faking it).
 - State which hook is recommended as the lead and why.
 
 ### Step 2: Generate Outreach Email
@@ -168,10 +172,19 @@ Before finalizing the email draft, apply these non-mechanical checks to ensure t
 
 Format your response clearly with:
 ### 1. Personalization Hooks
+- **Hook 1** `[comment-backed / transcript-only]`: "..."
+  - **Timestamp:** MM:SS – MM:SS
+  - **Video Link:** https://www.youtube.com/watch?v={video_id}&t=...s
+  - **What happens:** ...
+(repeat for Hook 2 & 3)
+
+**Recommendation:** ...
+
 ### 2. Subject Line Options
 - **Primary:** ...
 - **Alternative 1:** ...
 - **Alternative 2:** ...
+
 ### 3. Outreach Draft
 """
     return prompt.strip()

@@ -35,11 +35,14 @@ Do not write hook candidates or summaries using AI-tell phrasing. See `reference
 
 Return:
 - Video title/URL
-- 1-2 sentence factual summary (for your own context, not for the email)
-- 2-3 hook candidates, each tagged `[comment-backed]` or `[transcript-only]`
-- A one-line recommendation on which hook to lead with and why
+- 2-3 hook candidates, each with:
+  * **Hook text**: Written in Safwan's voice, flowing directly into sponsor appeal. Tagged `[comment-backed]` or `[transcript-only]`.
+  * **Timestamp Range**: Exact video range where the moment occurs (e.g. `08:14 – 08:45`).
+  * **Clickable Link**: Direct link starting at that cue (e.g. `https://www.youtube.com/watch?v={video_id}&t={start_seconds}s`).
+  * **What happens in this clip (Viewer Context)**: 1–2 plain, factual sentences explaining what the creator actually demonstrates or says at that moment. This gives Safwan instant context so he knows what the hook means without having to watch the full video.
+- A one-line recommendation on which hook to lead with and why.
 
-Then, if the user wants the full draft, hand off to `safwan-voice` (and `cold-email` / `spam-word-checker` for structure/deliverability) rather than writing the email here.
+Then, hand off to `safwan-voice` (and `cold-email` / `spam-word-checker` for structure/deliverability) to draft the email.
 
 ## Evaluating output
 

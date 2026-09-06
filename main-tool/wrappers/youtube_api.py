@@ -122,48 +122,80 @@ def _ensure_deno() -> bool:
 
 def _clean_vtt(vtt_path: Path) -> str:
     """
-    Convert a raw VTT subtitle file into a clean continuous text string.
+    Convert a raw VTT subtitle file into a timestamped transcript.
 
-    Strips timestamps, WebVTT headers, inline styling/timing tags (<c>,
-    <00:00:00.000>), and deduplicates YouTube's progressive caption rolls
-    (where each cue repeats the previous line plus one new word).
+    Parses cue start times, deduplicates YouTube's progressive rolling captions,
+    and formats them into ~15-second timestamped blocks (e.g. '[01:23] text...').
+    This gives downstream models exact timestamp references for every spoken line.
     """
     with open(vtt_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
-    tokens: list[str] = []
+    def _parse_ts(ts_str: str) -> tuple[str, int]:
+        parts = ts_str.strip().split(":")
+        if len(parts) == 3:
+            h, m, s = parts
+            sec = int(h) * 3600 + int(m) * 60 + float(s)
+        elif len(parts) == 2:
+            m, s = parts
+            sec = int(m) * 60 + float(s)
+        else:
+            sec = float(parts[0])
+        mins = int(sec // 60)
+        secs = int(sec % 60)
+        return f"{mins:02d}:{secs:02d}", int(sec)
+
+    time_regex = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s*-->")
+
+    cues: list[tuple[str, int, str]] = []
+    curr_ts = "00:00"
+    curr_sec = 0
 
     for raw_line in lines:
         line = raw_line.strip()
-
-        # Skip WebVTT structural lines
-        if (
-            not line
-            or line.startswith(("WEBVTT", "Kind:", "Language:", "NOTE"))
-            or "-->" in line
-        ):
+        if not line or line.startswith(("WEBVTT", "Kind:", "Language:", "NOTE")):
+            continue
+        m = time_regex.search(line)
+        if m:
+            curr_ts, curr_sec = _parse_ts(m.group(1))
             continue
 
-        # Strip inline tags: <c>, </c>, <00:00:00.000>, <b>, etc.
-        line = re.sub(r"<[^>]+>", "", line)
-        line = html.unescape(line).strip()
-
-        if not line:
+        clean = re.sub(r"<[^>]+>", "", line)
+        clean = html.unescape(clean).strip()
+        if not clean:
             continue
 
-        # Deduplicate YouTube's rolling caption pattern:
-        #   cue N:   "hello world"
-        #   cue N+1: "hello world how"   ← extends previous → replace
-        #   cue N+2: "world how"         ← prefix of current → skip
-        if tokens and line.startswith(tokens[-1]):
-            tokens[-1] = line           # extend
-        elif tokens and tokens[-1].startswith(line):
-            continue                    # subset of what we already have
-        elif not tokens or line != tokens[-1]:
-            tokens.append(line)
+        # Deduplicate YouTube's rolling caption pattern
+        if cues and clean.startswith(cues[-1][2]):
+            cues[-1] = (cues[-1][0], cues[-1][1], clean)
+        elif cues and cues[-1][2].startswith(clean):
+            continue
+        elif not cues or clean != cues[-1][2]:
+            cues.append((curr_ts, curr_sec, clean))
 
-    full_text = " ".join(tokens)
-    return re.sub(r"\s+", " ", full_text).strip()
+    if not cues:
+        return ""
+
+    # Group into ~15-second blocks with [MM:SS] tags
+    grouped_blocks: list[str] = []
+    last_block_sec = -999
+    curr_block_text: list[str] = []
+    curr_block_ts = "00:00"
+
+    for ts, sec, text in cues:
+        if sec - last_block_sec >= 15:
+            if curr_block_text:
+                grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+            curr_block_ts = ts
+            last_block_sec = sec
+            curr_block_text = [text]
+        else:
+            curr_block_text.append(text)
+
+    if curr_block_text:
+        grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+
+    return "\n".join(grouped_blocks)
 
 
 def _check_captions(url: str, lang: str = "en") -> str | None:

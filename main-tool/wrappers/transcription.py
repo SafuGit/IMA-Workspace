@@ -93,10 +93,18 @@ def _run_transcription(
         condition_on_previous_text=False,   # avoids slow context propagation
     )
 
-    # Materialise the lazy generator
-    text = " ".join(seg.text.strip() for seg in segments)
+    # Materialise segments and format with [MM:SS] timestamp tags
+    lines = []
+    for seg in segments:
+        text = seg.text.strip()
+        if text:
+            mins = int(seg.start // 60)
+            secs = int(seg.start % 60)
+            lines.append(f"[{mins:02d}:{secs:02d}] {text}")
+
+    full_text = "\n".join(lines)
     elapsed = time.perf_counter() - t0
-    return text, elapsed
+    return full_text, elapsed
 
 
 def _print_benchmark(
