@@ -23,8 +23,8 @@ export default function LoginPage() {
     // Direct DB Settings (or destination on VPS)
     host: "127.0.0.1",
     port: "5432",
-    database: "aikido_ima_safwano",
-    user: "app_user_safwano",
+    database: "",
+    user: "",
     password: "",
     ssl: false,
 
@@ -66,8 +66,8 @@ export default function LoginPage() {
         ...prev,
         host: "127.0.0.1",
         port: "5432",
-        database: "aikido_ima_safwano",
-        user: "app_user_safwano",
+        database: "",
+        user: "",
         password: "",
         ssl: false,
         sshTunnel: {
@@ -85,9 +85,9 @@ export default function LoginPage() {
       setFormData({
         host: "localhost",
         port: "5432",
-        database: "aikido_ima_safwano",
-        user: "app_user_safwano",
-        password: "aikido_app_password",
+        database: "",
+        user: "",
+        password: "",
         ssl: false,
         sshTunnel: {
           enabled: false,
@@ -387,9 +387,10 @@ export default function LoginPage() {
                 <input
                   type="text"
                   required
+                  placeholder="e.g. aikido_ima"
                   value={formData.database}
                   onChange={(e) => setFormData({ ...formData, database: e.target.value })}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 placeholder:text-slate-600"
                 />
               </div>
 
@@ -399,9 +400,10 @@ export default function LoginPage() {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. app_user"
                     value={formData.user}
                     onChange={(e) => setFormData({ ...formData, user: e.target.value })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 placeholder:text-slate-600"
                   />
                 </div>
 
