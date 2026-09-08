@@ -9,6 +9,11 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const minSubs = Number(searchParams.get("minSubs")) || 0;
     const maxSubs = Number(searchParams.get("maxSubs")) || 0;
+    const minViews = Number(searchParams.get("minViews")) || 0;
+    const minEngagement = Number(searchParams.get("minEngagement")) || 0;
+    const rejectionReason = searchParams.get("rejectionReason") || "";
+    const sortBy = searchParams.get("sortBy") || "created_at";
+    const sortOrder = (searchParams.get("sortOrder") || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const limit = Math.min(100, Math.max(10, Number(searchParams.get("limit")) || 25));
     const offset = (page - 1) * limit;
@@ -45,12 +50,54 @@ export async function GET(req: NextRequest) {
       pIdx++;
     }
 
+    // Min views
+    if (minViews > 0) {
+      conditions.push(`c.avg_views >= $${pIdx}`);
+      params.push(minViews);
+      pIdx++;
+    }
+
+    // Min engagement rate
+    if (minEngagement > 0) {
+      conditions.push(`(c.avg_engagement_rate >= $${pIdx} OR (c.avg_engagement_rate <= 1 AND c.avg_engagement_rate >= ($${pIdx}::float / 100.0)))`);
+      params.push(minEngagement);
+      pIdx++;
+    }
+
+    // Rejection reason filter
+    if (rejectionReason.trim()) {
+      conditions.push(`c.rejection_reason::text = $${pIdx}`);
+      params.push(rejectionReason.trim());
+      pIdx++;
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     // Count query
     const countSql = `SELECT COUNT(*)::int AS total FROM yt_channels c ${whereClause}`;
     const countRes = await query<{ total: number }>(countSql, params);
     const total = countRes[0]?.total || 0;
+
+    // Valid sort columns map for injection safety
+    const validSortColumns: Record<string, string> = {
+      subscribers: "c.subscriber_count",
+      subscriber_count: "c.subscriber_count",
+      views: "c.avg_views",
+      avg_views: "c.avg_views",
+      engagement: "c.avg_engagement_rate",
+      avg_engagement_rate: "c.avg_engagement_rate",
+      created_at: "c.created_at",
+      date: "c.created_at",
+      name: "c.channel_name",
+      channel_name: "c.channel_name",
+    };
+
+    let orderClause = `ORDER BY ${validSortColumns[sortBy] || "c.created_at"} ${sortOrder} NULLS LAST, c.channel_id ASC`;
+    if (!sortBy || sortBy === "default") {
+      orderClause = `ORDER BY
+        CASE WHEN c.valid IS NULL THEN 0 WHEN c.valid = TRUE THEN 1 ELSE 2 END ASC,
+        c.created_at DESC`;
+    }
 
     // Data query with discovery video details
     const dataSql = `
@@ -81,9 +128,7 @@ export async function GET(req: NextRequest) {
         LIMIT 1
       ) dv ON TRUE
       ${whereClause}
-      ORDER BY
-        CASE WHEN c.valid IS NULL THEN 0 WHEN c.valid = TRUE THEN 1 ELSE 2 END ASC,
-        c.created_at DESC
+      ${orderClause}
       LIMIT $${pIdx} OFFSET $${pIdx + 1}
     `;
 

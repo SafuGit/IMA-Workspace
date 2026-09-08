@@ -16,6 +16,11 @@ import {
   Loader2,
   RefreshCw,
   Video,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  SlidersHorizontal,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -36,6 +41,17 @@ export default function ChannelsTable({
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Sorting state
+  const [sortBy, setSortBy] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Filtering state
+  const [subTier, setSubTier] = useState<string>("all");
+  const [minViews, setMinViews] = useState<string>("");
+  const [minEngagement, setMinEngagement] = useState<string>("");
+  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const [showFilters, setShowFilters] = useState<boolean>(true);
+
   // Reject modal state
   const [rejectingChannel, setRejectingChannel] = useState<YtChannel | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -43,12 +59,37 @@ export default function ChannelsTable({
   const fetchChannels = useCallback(async () => {
     setLoading(true);
     try {
+      let minSubs = 0;
+      let maxSubs = 0;
+      if (subTier === "under50k") {
+        maxSubs = 50000;
+      } else if (subTier === "50k-100k") {
+        minSubs = 50000;
+        maxSubs = 100000;
+      } else if (subTier === "100k-250k") {
+        minSubs = 100000;
+        maxSubs = 250000;
+      } else if (subTier === "250k-1m") {
+        minSubs = 250000;
+        maxSubs = 1000000;
+      } else if (subTier === "over1m") {
+        minSubs = 1000000;
+      }
+
       const params = new URLSearchParams({
         tab,
         search,
+        sortBy,
+        sortOrder,
         page: page.toString(),
         limit: "25",
       });
+
+      if (minSubs > 0) params.set("minSubs", minSubs.toString());
+      if (maxSubs > 0) params.set("maxSubs", maxSubs.toString());
+      if (minViews) params.set("minViews", minViews);
+      if (minEngagement) params.set("minEngagement", minEngagement);
+      if (rejectionReason) params.set("rejectionReason", rejectionReason);
 
       const res = await fetch(`/api/channels?${params.toString()}`);
       const data = await res.json();
@@ -62,11 +103,46 @@ export default function ChannelsTable({
     } finally {
       setLoading(false);
     }
-  }, [tab, search, page]);
+  }, [tab, search, sortBy, sortOrder, subTier, minViews, minEngagement, rejectionReason, page]);
 
   useEffect(() => {
     fetchChannels();
   }, [fetchChannels]);
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortOrder(column === "channel_name" ? "asc" : "desc");
+    }
+    setPage(1);
+  };
+
+  const handleQuickSortChange = (val: string) => {
+    const [col, dir] = val.split("-");
+    setSortBy(col);
+    setSortOrder(dir as "asc" | "desc");
+    setPage(1);
+  };
+
+  const activeFiltersCount =
+    (subTier !== "all" ? 1 : 0) +
+    (minViews ? 1 : 0) +
+    (minEngagement ? 1 : 0) +
+    (rejectionReason ? 1 : 0) +
+    (sortBy !== "created_at" || sortOrder !== "desc" ? 1 : 0);
+
+  const handleResetFilters = () => {
+    setSubTier("all");
+    setMinViews("");
+    setMinEngagement("");
+    setRejectionReason("");
+    setSortBy("created_at");
+    setSortOrder("desc");
+    setSearch("");
+    setPage(1);
+  };
 
   const handleApprove = async (channelId: string) => {
     setActionLoadingId(channelId);
@@ -123,11 +199,11 @@ export default function ChannelsTable({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4">
+      {/* Top Filter & Search Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* Tab Buttons */}
-        <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
           {[
             { id: "unreviewed", label: "Unreviewed Queue", icon: HelpCircle },
             { id: "approved", label: "Approved Candidates", icon: CheckCircle2 },
@@ -143,7 +219,7 @@ export default function ChannelsTable({
                   setTab(t.id);
                   setPage(1);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                   isActive
                     ? "bg-indigo-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -156,28 +232,174 @@ export default function ChannelsTable({
           })}
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search channel name or @handle..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder:text-slate-500 transition-all"
-          />
+        {/* Search & Filter Trigger */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search creator name or @handle..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder:text-slate-500 transition-all"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${
+              showFilters || activeFiltersCount > 0
+                ? "bg-indigo-600/20 text-indigo-300 border-indigo-500/30"
+                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Advanced Filter Toolbar */}
+      {showFilters && (
+        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-md shadow-lg space-y-3">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            {/* Quick Sort Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Sort:</span>
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => handleQuickSortChange(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              >
+                <option value="created_at-desc">Recently Discovered</option>
+                <option value="created_at-asc">Oldest Discovered</option>
+                <option value="subscriber_count-desc">Subscribers: High to Low</option>
+                <option value="subscriber_count-asc">Subscribers: Low to High</option>
+                <option value="avg_views-desc">Avg Views: High to Low</option>
+                <option value="avg_views-asc">Avg Views: Low to High</option>
+                <option value="avg_engagement_rate-desc">Engagement: High to Low</option>
+                <option value="channel_name-asc">Channel Name: A to Z</option>
+              </select>
+            </div>
+
+            {/* Subscriber Tier Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Audience:</span>
+              <select
+                value={subTier}
+                onChange={(e) => {
+                  setSubTier(e.target.value);
+                  setPage(1);
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              >
+                <option value="all">All Subscribers</option>
+                <option value="under50k">&lt; 50K</option>
+                <option value="50k-100k">50K - 100K</option>
+                <option value="100k-250k">100K - 250K</option>
+                <option value="250k-1m">250K - 1M</option>
+                <option value="over1m">&gt; 1M</option>
+              </select>
+            </div>
+
+            {/* Min Views Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Views:</span>
+              <select
+                value={minViews}
+                onChange={(e) => {
+                  setMinViews(e.target.value);
+                  setPage(1);
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              >
+                <option value="">Any Avg Views</option>
+                <option value="1000">&gt; 1,000 views</option>
+                <option value="5000">&gt; 5,000 views</option>
+                <option value="10000">&gt; 10,000 views</option>
+                <option value="50000">&gt; 50,000 views</option>
+                <option value="100000">&gt; 100,000 views</option>
+              </select>
+            </div>
+
+            {/* Min Engagement Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Engagement:</span>
+              <select
+                value={minEngagement}
+                onChange={(e) => {
+                  setMinEngagement(e.target.value);
+                  setPage(1);
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              >
+                <option value="">Any Engagement</option>
+                <option value="1">&gt; 1%</option>
+                <option value="2">&gt; 2%</option>
+                <option value="3">&gt; 3%</option>
+                <option value="5">&gt; 5%</option>
+                <option value="10">&gt; 10%</option>
+              </select>
+            </div>
+
+            {/* Rejection Reason Dropdown (for rejected or all tabs) */}
+            {(tab === "rejected" || tab === "all") && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-medium">Bin Reason:</span>
+                <select
+                  value={rejectionReason}
+                  onChange={(e) => {
+                    setRejectionReason(e.target.value);
+                    setPage(1);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                >
+                  <option value="">All Rejection Reasons</option>
+                  <option value="followers">Followers Out of Range</option>
+                  <option value="avg views">Low Average Views</option>
+                  <option value="bad engagement rate">Poor Engagement Rate</option>
+                  <option value="bad content">Low Quality Content</option>
+                  <option value="unrelated">Unrelated Niche</option>
+                  <option value="other">Other / Unfit</option>
+                </select>
+              </div>
+            )}
+
+            {/* Reset All Filters Button */}
+            {(activeFiltersCount > 0 || search.trim() !== "") && (
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 text-slate-400 hover:text-red-400 text-xs font-medium ml-auto px-2.5 py-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset Filters
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Table Container */}
       <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
-          <div className="text-xs text-slate-400 font-medium">
-            Showing <span className="text-white font-semibold">{channels.length}</span> of{" "}
-            <span className="text-white font-semibold">{totalCount.toLocaleString()}</span> creators
+          <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
+            <span>
+              Showing <span className="text-white font-semibold">{channels.length}</span> of{" "}
+              <span className="text-white font-semibold">{totalCount.toLocaleString()}</span> creators
+            </span>
+            {sortBy && sortBy !== "created_at" && (
+              <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 font-mono">
+                Sorted by {sortBy} ({sortOrder.toUpperCase()})
+              </span>
+            )}
           </div>
           <button
             onClick={() => fetchChannels()}
@@ -193,13 +415,92 @@ export default function ChannelsTable({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/60">
-                <th className="py-3 px-4">Creator</th>
-                <th className="py-3 px-3">Subscribers</th>
-                <th className="py-3 px-3">Avg Views</th>
-                <th className="py-3 px-3">Engagement</th>
+                {/* Creator (Sortable) */}
+                <th className="py-3 px-4">
+                  <button
+                    onClick={() => handleSort("channel_name")}
+                    className="inline-flex items-center gap-1.5 uppercase hover:text-white transition-colors group"
+                  >
+                    <span>Creator</span>
+                    {sortBy === "channel_name" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-indigo-400" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                    )}
+                  </button>
+                </th>
+
+                {/* Subscribers (Sortable) */}
+                <th className="py-3 px-3">
+                  <button
+                    onClick={() => handleSort("subscriber_count")}
+                    className="inline-flex items-center gap-1.5 uppercase hover:text-white transition-colors group"
+                  >
+                    <span>Subscribers</span>
+                    {sortBy === "subscriber_count" || sortBy === "subscribers" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-indigo-400" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                    )}
+                  </button>
+                </th>
+
+                {/* Avg Views (Sortable) */}
+                <th className="py-3 px-3">
+                  <button
+                    onClick={() => handleSort("avg_views")}
+                    className="inline-flex items-center gap-1.5 uppercase hover:text-white transition-colors group"
+                  >
+                    <span>Avg Views</span>
+                    {sortBy === "avg_views" || sortBy === "views" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-indigo-400" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                    )}
+                  </button>
+                </th>
+
+                {/* Engagement Rate (Sortable) */}
+                <th className="py-3 px-3">
+                  <button
+                    onClick={() => handleSort("avg_engagement_rate")}
+                    className="inline-flex items-center gap-1.5 uppercase hover:text-white transition-colors group"
+                  >
+                    <span>Engagement</span>
+                    {sortBy === "avg_engagement_rate" || sortBy === "engagement" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-indigo-400" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                    )}
+                  </button>
+                </th>
+
+                {/* Discovery Video */}
                 <th className="py-3 px-3">Discovery Video</th>
+
+                {/* Status */}
                 <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-4 text-right sticky right-0 bg-slate-950/95 backdrop-blur shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] z-10">Triage Actions</th>
+
+                {/* Sticky Triage Actions */}
+                <th className="py-3 px-4 text-right sticky right-0 bg-slate-950/95 backdrop-blur shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] z-10">
+                  Triage Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-sm">
@@ -213,7 +514,17 @@ export default function ChannelsTable({
               ) : channels.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-xs text-slate-500">
-                    No creators found matching this filter.
+                    <div className="space-y-1">
+                      <div>No creators found matching these filters.</div>
+                      {activeFiltersCount > 0 && (
+                        <button
+                          onClick={handleResetFilters}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
+                        >
+                          Reset filters
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (
