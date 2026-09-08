@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Database,
@@ -12,13 +12,13 @@ import {
   Sparkles,
   Lock,
   Terminal,
-  ChevronDown,
-  ChevronUp,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
 
+  const [checkingSession, setCheckingSession] = useState(true);
   const [formData, setFormData] = useState({
     // Direct DB Settings (or destination on VPS)
     host: "127.0.0.1",
@@ -43,6 +43,22 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if an encrypted HttpOnly session already exists
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.isLoggedIn) {
+          router.replace("/");
+        } else {
+          setCheckingSession(false);
+        }
+      })
+      .catch(() => {
+        setCheckingSession(false);
+      });
+  }, [router]);
 
   const applyPreset = (type: "vps-ssh" | "direct-local") => {
     if (type === "vps-ssh") {
@@ -122,6 +138,17 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
+        <div className="flex items-center gap-3 text-slate-400 text-xs font-medium bg-slate-900/80 px-4 py-3 rounded-xl border border-slate-800">
+          <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+          <span>Restoring encrypted session...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 selection:bg-indigo-500 selection:text-white">
@@ -411,9 +438,15 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-[11px] text-slate-500 mt-4">
-          Next.js securely forwards connections through SSH Port 22. Your VPS database does not need to expose port 5432 to the public internet.
-        </p>
+        <div className="space-y-1 mt-4 text-center">
+          <p className="text-[11px] text-slate-500">
+            Next.js securely forwards connections through SSH Port 22. Port 5432 does not need to be exposed.
+          </p>
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-400/80 pt-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Encrypted 30-day HttpOnly cookie session. Zero credentials stored in localStorage.</span>
+          </div>
+        </div>
       </div>
     </div>
   );
