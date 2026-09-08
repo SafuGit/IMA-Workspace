@@ -3,20 +3,15 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { query } from "@/lib/db";
 import DashboardShell from "@/components/DashboardShell";
-import { formatCompactNumber, formatPercent, formatDate } from "@/lib/utils";
 import {
   Users,
   CheckCircle2,
-  XCircle,
-  HelpCircle,
   Mail,
   Search,
   ArrowRight,
-  TrendingUp,
+  HelpCircle,
   Sparkles,
-  ExternalLink,
 } from "lucide-react";
-import { YtChannel } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -35,16 +30,10 @@ export default async function OverviewPage() {
   let activeKeywords = 0;
   let emailsDrafted = 0;
   let emailsSent = 0;
-  let recentChannels: YtChannel[] = [];
   let dbError: string | null = null;
 
   try {
-    const [
-      chStats,
-      kwStats,
-      emailStats,
-      recentChRows,
-    ] = await Promise.all([
+    const [chStats, kwStats, emailStats] = await Promise.all([
       query<{
         total: string;
         unreviewed: string;
@@ -70,22 +59,6 @@ export default async function OverviewPage() {
           COUNT(*) FILTER (WHERE outreach_sent_at IS NOT NULL)::text AS sent
         FROM influencer_emails
       `),
-      query<YtChannel>(`
-        SELECT
-          channel_id,
-          channel_handle,
-          channel_name,
-          profile_photo_url,
-          subscriber_count,
-          avg_views,
-          avg_engagement_rate,
-          valid,
-          rejection_reason,
-          created_at
-        FROM yt_channels
-        ORDER BY created_at DESC
-        LIMIT 6
-      `),
     ]);
 
     totalChannels = Number(chStats[0]?.total || 0);
@@ -98,7 +71,6 @@ export default async function OverviewPage() {
 
     emailsDrafted = Number(emailStats[0]?.drafted || 0);
     emailsSent = Number(emailStats[0]?.sent || 0);
-    recentChannels = recentChRows;
   } catch (err: unknown) {
     dbError = err instanceof Error ? err.message : "Failed to load overview data";
   }
@@ -250,114 +222,6 @@ export default async function OverviewPage() {
           >
             Start Triage Now <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
-
-        {/* Recent Channels Table */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-white">Recently Discovered Creators</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Latest channels captured from keyword discovery runs</p>
-            </div>
-            <Link
-              href="/channels"
-              className="text-xs font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
-            >
-              View All Channels <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/40">
-                  <th className="py-3 px-5">Creator</th>
-                  <th className="py-3 px-4">Subscribers</th>
-                  <th className="py-3 px-4">Avg Views</th>
-                  <th className="py-3 px-4">Engagement</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 text-sm">
-                {recentChannels.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-slate-500">
-                      No channels recorded yet in yt_channels table.
-                    </td>
-                  </tr>
-                ) : (
-                  recentChannels.map((channel) => (
-                    <tr key={channel.channel_id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3 px-5">
-                        <div className="flex items-center gap-3">
-                          {channel.profile_photo_url ? (
-                            <img
-                              src={channel.profile_photo_url}
-                              alt=""
-                              className="w-9 h-9 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400">
-                              {channel.channel_name.charAt(0)}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="font-semibold text-white truncate text-xs flex items-center gap-1.5">
-                              {channel.channel_name}
-                              <a
-                                href={`https://www.youtube.com/channel/${channel.channel_id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-slate-500 hover:text-slate-300"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </div>
-                            <div className="text-[11px] text-slate-400 truncate">
-                              {channel.channel_handle || channel.channel_id}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-slate-300">
-                        {formatCompactNumber(channel.subscriber_count)}
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-slate-300">
-                        {formatCompactNumber(channel.avg_views)}
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-slate-300">
-                        {formatPercent(channel.avg_engagement_rate)}
-                      </td>
-                      <td className="py-3 px-4 text-xs">
-                        {channel.valid === true ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3" /> Approved
-                          </span>
-                        ) : channel.valid === false ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                            <XCircle className="w-3 h-3" /> Rejected
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            <HelpCircle className="w-3 h-3" /> Unreviewed
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-5 text-right">
-                        <Link
-                          href={`/channels?search=${encodeURIComponent(channel.channel_name)}`}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
-                        >
-                          Review &rarr;
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </DashboardShell>
