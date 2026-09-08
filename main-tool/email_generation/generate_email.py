@@ -139,8 +139,8 @@ INSTRUCTIONS:
   4. **What happens in this clip**: 1-2 plain, factual sentences describing what the creator physically demonstrates or says at that moment. (Safwan hasn't watched the whole video himself — this gives him instant clarity so he never sounds like he's faking it).
 - State which hook is recommended as the lead and why.
 
-### Step 2: Generate Outreach Email
-- STRICT LENGTH: 50 to 80 words total (Absolute maximum 100 words). The shorter the email, the higher the reply rate.
+### Step 2: Generate 3 Distinct Outreach Email Drafts
+- STRICT LENGTH: Each email must be 50 to 80 words total (Absolute maximum 90 words). The shorter the email, the higher the reply rate.
 - Subject Lines (Provide 3 curiosity-driven options):
   - BANNED: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry'. These trigger instant mental spam filters.
   - Instead, use pattern interrupts and curiosity gaps (2-4 words, lowercase or natural capitalization):
@@ -148,27 +148,53 @@ INSTRUCTIONS:
     * The casual peer ping: e.g. '5 mins? Safwan', 'quick thought Safwan', '2 mins?'
     * The specific observation / problem: e.g. 'fix this one thing', 'Save this email', 'inbox noise', or referencing a specific content detail (e.g. 'that claude workflow')
   - Provide 1 primary subject line and 2 alternative options.
-- Opener: Greet the creator by name or channel name ('Hey [Name],').
-- Paragraph 1 — Hook & Bridge (1-2 sentences, ~25-35 words):
-  - BANNED: Do NOT use an isolated joke followed by 'Jokes aside,'. That is a formulaic crutch.
-  - The hook must flow directly into the reason for reaching out. Connect what you observed in the video directly to their market value (e.g. "The way you broke down Claude workflows with zero fluff is exactly what dev/AI tooling brands look for when they sponsor creators").
-- Paragraph 2 — Understated Offer (EXACTLY 1 casual sentence, ~15-20 words):
-  - BANNED: Do NOT write a 3-4 sentence sales pitch trying to explain everything (inbox spam, vetting, rate negotiations, no upfront fees, no lock-in). It sounds too salesy and corporate.
-  - Keep it understated and peer-level: state the opportunity in one casual sentence (e.g. "I line up B2B sponsors for upcoming videos so you don't have to deal with the negotiation back-and-forth.").
-- CTA: Low-friction peer ask ('Worth a quick chat?'). The creator should be able to answer in a single word.
-- Sign-off: 'Best, Safwan | Fylint'.
-- QA: Strictly follow spam-word-checker rules (no banned hype/pressure words, no marketing fluff).
+
+- ZERO BOILERPLATE & BANNED STOCK CLICHÉS:
+  The following phrases are strictly BANNED because they sound like automated agency templates:
+  - "vetted B2B brands" / "vetted B2B software brands"
+  - "lowball inbox pitches" / "skip lowball pitches" / "sorting through lowball offers" / "inbox pitches"
+  - "line up B2B sponsors" / "line up sponsors"
+  - "negotiation back-and-forth" / "skip the negotiation"
+  - "stay 100% focused on creating content" / "focus on making videos"
+  - "so you don't have to waste time"
+  - "Worth a quick chat?" / "Worth exploring for your next video?" / "Curious to see what that looks like?"
+
+- STRICT HONESTY — ZERO FABRICATED SPONSORS:
+  NEVER claim to have active brand clients, signed budgets, or specific companies waiting (e.g. BANNED: "I have a couple AI tools looking for integrations", "A brand asked me to reach out to you"). Safwan represents creators to pitch their channels to B2B brands and negotiate deals; he does NOT have pre-signed contracts in hand.
+
+- DRAFTS VARIETY REQUIREMENT:
+  Generate THREE (3) completely distinct outreach email drafts (Draft A, Draft B, Draft C). Each draft must pair with a different hook from Step 1, take a completely different angle on the partnership, use fresh phrasing and vocabulary, and end with a uniquely tailored CTA:
+
+  * **Draft A: Viewer Trust & Monetization Angle** (pairs with Hook 1)
+    - Hook: Bridge from Hook 1 directly to the creator's audience trust.
+    - Offer: 1 casual sentence framing how high tutorial retention / instructional clarity positions the channel to command premium flat sponsorship rates rather than standard affiliate cuts.
+    - CTA: Tailored question asking about their sponsorship pricing benchmarks or rate structure (answerable in 1 word).
+
+  * **Draft B: Software Category Fit Angle** (pairs with Hook 2)
+    - Hook: Bridge from Hook 2 into the specific software category relevant to this tutorial (e.g. dev tooling, workflow automation, AI apps).
+    - Offer: 1 casual sentence explaining that Safwan pitches tech channels directly to software companies in that exact space to secure integration spots.
+    - CTA: Tailored question asking if they'd be open to seeing a couple company ideas that fit their upcoming videos.
+
+  * **Draft C: Production Pipeline & Calendar Angle** (pairs with Hook 3)
+    - Hook: Bridge from Hook 3 into the creator's upcoming production flow.
+    - Offer: 1 casual sentence offering to represent their channel and pitch upcoming video topics to relevant brands ahead of time.
+    - CTA: Tailored question asking if they have any open integration slots in their upcoming recording schedule.
+
+- Structure for each draft:
+  - Greeting: "Hey [Name],"
+  - Paragraph 1: Hook & Bridge (~25-35 words)
+  - Paragraph 2: Honest Creator Benefit (~15-20 words, no banned clichés)
+  - CTA: Dynamic, low-friction closing question (~5-10 words, answerable in 1 word)
+  - Sign-off: "Best, Safwan | Fylint"
 
 ### Step 3: The Last Look
-Before finalizing the email draft, apply these non-mechanical checks to ensure the email gets answered:
-1. Is the email between 50 and 80 words? If it is over 90 words, aggressively cut sentences.
-2. Does paragraph 2 read like a sales pitch monologue? If yes, cut it down to a single casual sentence.
-3. Would a stranger know I watched the video? Not "did I mention the video". Would they know.
-4. Does the offer follow from the hook, or merely sit under it? (If there is a disconnected joke or 'Jokes aside', rewrite so the observation bridges directly into the opportunity).
-5. Is there anything in here that is about me? Cut it. (Eliminate 'We run...', 'We handle...'; frame around what the creator gets).
-6. Could the creator reply with a single word? If answering takes thought, it will take a week.
-7. Am I claiming anything I could not defend if they asked "how do you know?" That includes the read.
-8. Does it sound composed? Composed is the tell. Read it aloud one more time.
+Before finalizing, verify:
+1. Is each email strictly between 50 and 80 words?
+2. Did any draft use ANY of the banned stock clichés ("lowball inbox pitches", "vetted B2B brands", "negotiation back-and-forth", "Worth a quick chat?")? If yes, rewrite it completely!
+3. Are all 3 drafts genuinely different in phrasing, angle, and CTA?
+4. Are all claims 100% honest (no phantom sponsors or fake budgets)?
+5. Would a stranger know I watched the video?
+6. Could the creator reply to each CTA with a single word?
 
 Format your response clearly with:
 ### 1. Personalization Hooks
@@ -185,7 +211,15 @@ Format your response clearly with:
 - **Alternative 1:** ...
 - **Alternative 2:** ...
 
-### 3. Outreach Draft
+### 3. Outreach Drafts
+#### Option A (Monetization & Flat Rates):
+...
+
+#### Option B (Software Category Fit):
+...
+
+#### Option C (Production Pipeline):
+...
 """
     return prompt.strip()
 
@@ -247,10 +281,10 @@ def generate_hook_and_email(
     subject_section = ""
     email_section = ""
 
-    if "### 3. Outreach Draft" in output:
-        parts_3 = output.split("### 3. Outreach Draft")
-        email_section = parts_3[1].strip()
-        before_draft = parts_3[0]
+    draft_split = re.split(r"### 3\.\s+Outreach Drafts?", output)
+    if len(draft_split) > 1:
+        email_section = draft_split[1].strip()
+        before_draft = draft_split[0]
 
         if "### 2. Subject Line Options" in before_draft:
             parts_2 = before_draft.split("### 2. Subject Line Options")
