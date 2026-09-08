@@ -13,6 +13,8 @@ export default async function DashboardShell({ children }: DashboardShellProps) 
       <Sidebar
         dbHost={session.db?.host}
         dbName={session.db?.database}
+        isSshTunnel={session.db?.sshTunnel?.enabled}
+        sshHost={session.db?.sshTunnel?.sshHost}
       />
       <main className="flex-1 overflow-x-hidden min-w-0">
         {children}

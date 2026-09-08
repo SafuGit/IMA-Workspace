@@ -1,3 +1,14 @@
+export interface SshTunnelConfig {
+  enabled: boolean;
+  sshHost: string;
+  sshPort: number;
+  sshUser: string;
+  sshAuthType: "password" | "key";
+  sshPassword?: string;
+  sshPrivateKey?: string;
+  sshPassphrase?: string;
+}
+
 export interface DbCredentials {
   host: string;
   port: number;
@@ -5,6 +16,7 @@ export interface DbCredentials {
   user: string;
   password?: string;
   ssl?: boolean;
+  sshTunnel?: SshTunnelConfig;
 }
 
 export type RejectionReason =

@@ -11,15 +11,18 @@ import {
   LogOut,
   Sparkles,
   Database,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   dbHost?: string;
   dbName?: string;
+  isSshTunnel?: boolean;
+  sshHost?: string;
 }
 
-export default function Sidebar({ dbHost, dbName }: SidebarProps) {
+export default function Sidebar({ dbHost, dbName, isSshTunnel, sshHost }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -78,16 +81,23 @@ export default function Sidebar({ dbHost, dbName }: SidebarProps) {
       {/* Database Session Footer */}
       <div className="p-4 border-t border-slate-800 bg-slate-950/40">
         <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 mb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-medium text-slate-300">Connected DB</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-medium text-slate-300">Connected DB</span>
+            </div>
+            {isSshTunnel && (
+              <span className="flex items-center gap-0.5 text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                <Lock className="w-2.5 h-2.5" /> SSH
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 truncate">
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 truncate font-mono">
             <Database className="w-3 h-3 text-indigo-400 shrink-0" />
             <span className="truncate">{dbName || "aikido_ima"}</span>
           </div>
-          <div className="text-[10px] text-slate-500 truncate mt-0.5">
-            Host: {dbHost || "localhost"}
+          <div className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">
+            {isSshTunnel ? `via ${sshHost}` : `Host: ${dbHost || "localhost"}`}
           </div>
         </div>
 
