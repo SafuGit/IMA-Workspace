@@ -193,13 +193,13 @@ export default function ChannelsTable({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-950/60">
-                <th className="py-3 px-5">Creator</th>
-                <th className="py-3 px-4">Subscribers</th>
-                <th className="py-3 px-4">Avg Views</th>
-                <th className="py-3 px-4">Engagement</th>
-                <th className="py-3 px-4">Discovery Video</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-5 text-right">Triage Actions</th>
+                <th className="py-3 px-4">Creator</th>
+                <th className="py-3 px-3">Subscribers</th>
+                <th className="py-3 px-3">Avg Views</th>
+                <th className="py-3 px-3">Engagement</th>
+                <th className="py-3 px-3">Discovery Video</th>
+                <th className="py-3 px-3">Status</th>
+                <th className="py-3 px-4 text-right sticky right-0 bg-slate-950/95 backdrop-blur shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] z-10">Triage Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-sm">
@@ -226,33 +226,33 @@ export default function ChannelsTable({
                       className="hover:bg-slate-800/30 transition-colors group"
                     >
                       {/* Creator Profile */}
-                      <td className="py-3.5 px-5">
-                        <div className="flex items-center gap-3">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
                           {channel.profile_photo_url ? (
                             <img
                               src={channel.profile_photo_url}
                               alt=""
-                              className="w-10 h-10 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                              className="w-8 h-8 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
                               {channel.channel_name.charAt(0)}
                             </div>
                           )}
-                          <div className="min-w-0">
+                          <div className="min-w-0 max-w-[200px]">
                             <div className="font-semibold text-white truncate text-xs flex items-center gap-1.5">
-                              {channel.channel_name}
+                              <span className="truncate">{channel.channel_name}</span>
                               <a
                                 href={`https://www.youtube.com/channel/${channel.channel_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Open YouTube Channel"
-                                className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                className="text-slate-500 hover:text-indigo-400 transition-colors shrink-0"
                               >
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
-                            <div className="text-[11px] text-slate-400 truncate">
+                            <div className="text-[11px] text-slate-400 truncate font-mono">
                               {channel.channel_handle || channel.channel_id}
                             </div>
                           </div>
@@ -260,39 +260,39 @@ export default function ChannelsTable({
                       </td>
 
                       {/* Subscribers */}
-                      <td className="py-3.5 px-4 text-xs font-semibold text-slate-200">
+                      <td className="py-3 px-3 text-xs font-semibold text-slate-200 whitespace-nowrap">
                         {formatCompactNumber(channel.subscriber_count)}
                       </td>
 
                       {/* Avg Views */}
-                      <td className="py-3.5 px-4 text-xs font-medium text-slate-300">
+                      <td className="py-3 px-3 text-xs font-medium text-slate-300 whitespace-nowrap">
                         {formatCompactNumber(channel.avg_views)}
                       </td>
 
                       {/* Engagement Rate */}
-                      <td className="py-3.5 px-4 text-xs font-medium text-slate-300">
+                      <td className="py-3 px-3 text-xs font-medium text-slate-300 whitespace-nowrap">
                         {formatPercent(channel.avg_engagement_rate)}
                       </td>
 
                       {/* Discovery Video Thumbnail & Context */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3 px-3">
                         {channel.discovery_video_id ? (
                           <a
                             href={`https://www.youtube.com/watch?v=${channel.discovery_video_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 group/video max-w-xs"
+                            className="flex items-center gap-2 group/video max-w-[220px]"
                             title={channel.discovery_video_title || "Watch video"}
                           >
                             {channel.discovery_thumbnail_url ? (
                               <img
                                 src={channel.discovery_thumbnail_url}
                                 alt=""
-                                className="w-14 h-8 object-cover rounded bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                                className="w-12 h-7 object-cover rounded bg-slate-800 ring-1 ring-slate-700 shrink-0"
                               />
                             ) : (
-                              <div className="w-14 h-8 bg-slate-800 rounded flex items-center justify-center text-slate-500 shrink-0">
-                                <Video className="w-4 h-4" />
+                              <div className="w-12 h-7 bg-slate-800 rounded flex items-center justify-center text-slate-500 shrink-0">
+                                <Video className="w-3.5 h-3.5" />
                               </div>
                             )}
                             <span className="text-[11px] text-slate-300 group-hover/video:text-indigo-400 truncate font-medium">
@@ -305,7 +305,7 @@ export default function ChannelsTable({
                       </td>
 
                       {/* Status */}
-                      <td className="py-3.5 px-4 text-xs">
+                      <td className="py-3 px-3 text-xs whitespace-nowrap">
                         {channel.valid === true ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <CheckCircle2 className="w-3 h-3" /> Approved
@@ -316,7 +316,7 @@ export default function ChannelsTable({
                               <XCircle className="w-3 h-3" /> Bin
                             </span>
                             {channel.rejection_reason && (
-                              <div className="text-[10px] text-slate-500 truncate">
+                              <div className="text-[10px] text-slate-500 truncate max-w-[120px]">
                                 {channel.rejection_reason}
                               </div>
                             )}
@@ -329,7 +329,7 @@ export default function ChannelsTable({
                       </td>
 
                       {/* Triage Actions */}
-                      <td className="py-3.5 px-5 text-right">
+                      <td className="py-3 px-4 text-right sticky right-0 bg-slate-900 group-hover:bg-slate-800/90 backdrop-blur shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.5)] z-10">
                         <div className="inline-flex items-center gap-1.5">
                           {/* Approve Button */}
                           <button

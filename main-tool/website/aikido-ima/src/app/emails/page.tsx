@@ -19,7 +19,7 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
 
   return (
     <DashboardShell>
-      <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="p-6 sm:p-8 max-w-[1600px] mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Morning Outreach Hub</h1>
           <p className="text-sm text-slate-400 mt-1">
