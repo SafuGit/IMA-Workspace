@@ -25,9 +25,16 @@ whisper.cpp ggml-tiny.en  ~5–20% faster raw throughput on CPU
 
 import os
 import shutil
+import sys
 import tempfile
 import time
 from typing import Literal
+
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from faster_whisper import WhisperModel
 

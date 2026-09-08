@@ -311,6 +311,11 @@ def _download_audio(
 
     ydl_opts = {
         "format": "bestaudio/best",
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"]
+            }
+        },
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "m4a",
@@ -328,7 +333,7 @@ def _download_audio(
         ydl_opts["download_ranges"] = yt_dlp.utils.download_range_func(
             None, [(0, max_seconds)]
         )
-        ydl_opts["force_keyframes_at_cuts"] = True
+        ydl_opts["force_keyframes_at_cuts"] = False
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
