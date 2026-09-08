@@ -141,13 +141,19 @@ INSTRUCTIONS:
 
 ### Step 2: Generate 3 Distinct Outreach Email Drafts
 - STRICT LENGTH: Each email must be 50 to 80 words total (Absolute maximum 90 words). The shorter the email, the higher the reply rate.
-- Subject Lines (Provide 3 curiosity-driven options):
-  - BANNED: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry'. These trigger instant mental spam filters.
-  - Instead, use pattern interrupts and curiosity gaps (2-4 words, lowercase or natural capitalization):
-    * The intrigue / simpler path: e.g. 'the easy way', 'doing it the hard way', 'a simpler way'
-    * The casual peer ping: e.g. '5 mins? Safwan', 'quick thought Safwan', '2 mins?'
-    * The specific observation / problem: e.g. 'fix this one thing', 'Save this email', 'inbox noise', or referencing a specific content detail (e.g. 'that claude workflow')
-  - Provide 1 primary subject line and 2 alternative options.
+- Subject Lines (Provide 3 completely distinct, video-specific options):
+  - BANNED SALES WORDS: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry', 'proposal'.
+  - BANNED FILLER TEMPLATES: NEVER use generic canned subject lines:
+    * "doing it the hard way" / "a simpler way" / "the easy way"
+    * "quick thought safwan" / "5 mins? safwan" / "2 mins?" (NEVER put the sender's own name "Safwan" in the subject line!)
+    * "fix this one thing" / "save this email" / "inbox noise"
+    * "quick question" / "quick chat" / "quick thought"
+  - DYNAMIC GENERATION REQUIREMENT:
+    All 3 subject lines MUST be 100% tailored to the actual video topic, tools, and workflows (2–4 words, all lowercase):
+    * Primary (Tool / Feature Focus): 2–3 words referencing a specific feature, tool, or prompt mechanism demonstrated in the video.
+    * Alternative 1 (Workflow / Demo Focus): 2–3 words referencing the creator's specific workflow or real-world example used in the tutorial.
+    * Alternative 2 (Niche Integration Inquiry): 2–4 words referencing integrations or tools in this specific niche (e.g. ai tools, dev workflow, tutorial tooling) without sales buzzwords.
+  - Provide 1 primary subject line and 2 alternative options. All 3 must be completely unique and specific to this creator's video.
 
 - ZERO BOILERPLATE & BANNED STOCK CLICHÉS:
   The following phrases are strictly BANNED because they sound like automated agency templates:
@@ -195,6 +201,7 @@ Before finalizing, verify:
 4. Are all claims 100% honest (no phantom sponsors or fake budgets)?
 5. Would a stranger know I watched the video?
 6. Could the creator reply to each CTA with a single word?
+7. Did any subject line use banned templates ("doing it the hard way", "quick thought safwan", "the easy way", "a simpler way")? Are all 3 subject lines 100% unique and specific to the tools and workflows in this video?
 
 Format your response clearly with:
 ### 1. Personalization Hooks

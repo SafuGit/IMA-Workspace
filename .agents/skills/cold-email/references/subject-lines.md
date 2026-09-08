@@ -19,10 +19,11 @@ Subject lines that look like they came from a colleague, not a vendor, double op
 
 Creators are bombarded daily with generic agency blasts. Words like `sponsorship`, `partnership`, `collaboration`, `brand deals` trigger instant mental deletion.
 
-Instead, use curiosity-inducing pattern interrupts that look like a peer reaching out:
-- **The simpler path / intrigue:** `the easy way`, `doing it the hard way`, `a simpler way`
-- **The casual peer ping:** `5 mins? Safwan`, `quick thought Safwan`, `2 mins?`
-- **The specific observation or problem:** `fix this one thing`, `Save this email`, `inbox noise`, or pointing to a specific workflow (`that claude workflow`)
+Instead, use curiosity-inducing pattern interrupts that look like a peer reaching out about their specific video:
+- **Reference a specific tool/feature:** e.g. `claude artifacts`, `projects vs notebooks`, `the prompt breakdown` (2–3 words, lowercase).
+- **Reference their specific demo/workflow:** e.g. `your artifacts demo`, `practical claude workflows` (2–3 words, lowercase).
+- **Understated topic inquiry:** e.g. `claude tutorial integrations`, `ai tooling sponsors` (2–4 words, lowercase).
+- **Banned filler templates:** Never use `doing it the hard way`, `the easy way`, `a simpler way`, `quick thought Safwan`, `5 mins? Safwan`, `fix this one thing`, `Save this email`. Never put the sender's name in the subject line.
 
 ## Capitalization: lowercase wins
 
