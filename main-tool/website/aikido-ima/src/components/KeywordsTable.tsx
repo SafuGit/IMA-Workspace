@@ -202,8 +202,8 @@ export default function KeywordsTable() {
                 </tr>
               ) : (
                 keywords.map((kw) => {
-                  const totalMatched = kw.total_matched || 0;
-                  const passed = kw.passed_gate || 0;
+                  const totalMatched = Number(kw.total_matched) || 0;
+                  const passed = Number(kw.passed_gate) || 0;
                   const yieldRate = totalMatched > 0 ? ((passed / totalMatched) * 100).toFixed(1) : "0";
 
                   return (
