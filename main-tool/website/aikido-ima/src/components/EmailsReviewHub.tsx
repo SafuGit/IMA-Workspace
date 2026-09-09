@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Inbox,
 } from "lucide-react";
+import { CreatorAvatar } from "./SafeImage";
 
 interface EmailsReviewHubProps {
   initialChannelId?: string;
@@ -234,17 +235,12 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      {email.profile_photo_url ? (
-                        <img
-                          src={email.profile_photo_url}
-                          alt=""
-                          className="w-9 h-9 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
-                          {(email.channel_name || "C").charAt(0)}
-                        </div>
-                      )}
+                      <CreatorAvatar
+                        src={email.profile_photo_url}
+                        name={email.channel_name || "Creator"}
+                        className="w-9 h-9 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                        initialsClassName="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0 ring-1 ring-slate-700"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
                           <span className="text-xs font-bold text-white truncate">
@@ -285,17 +281,12 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
               {/* Creator Context Header */}
               <div className="p-5 border-b border-slate-800 bg-slate-950/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  {selectedEmail.profile_photo_url ? (
-                    <img
-                      src={selectedEmail.profile_photo_url}
-                      alt=""
-                      className="w-11 h-11 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-400 shrink-0">
-                      {(selectedEmail.channel_name || "C").charAt(0)}
-                    </div>
-                  )}
+                  <CreatorAvatar
+                    src={selectedEmail.profile_photo_url}
+                    name={selectedEmail.channel_name || "Creator"}
+                    className="w-11 h-11 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                    initialsClassName="w-11 h-11 rounded-full bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-400 shrink-0 ring-1 ring-slate-700"
+                  />
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-white">{selectedEmail.channel_name}</h3>

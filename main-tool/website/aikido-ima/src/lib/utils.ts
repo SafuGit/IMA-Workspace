@@ -38,3 +38,12 @@ export function formatDate(dateString: string | Date | null | undefined): string
     return String(dateString);
   }
 }
+
+export function getProxiedImageUrl(
+  url: string | null | undefined,
+  type: "avatar" | "thumbnail" = "avatar"
+): string {
+  if (!url) return "";
+  if (url.startsWith("/api/proxy-image") || url.startsWith("data:")) return url;
+  return `/api/proxy-image?url=${encodeURIComponent(url)}&type=${type}`;
+}

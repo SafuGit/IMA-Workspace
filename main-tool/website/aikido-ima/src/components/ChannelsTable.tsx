@@ -23,6 +23,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
+import { CreatorAvatar, VideoThumbnail } from "./SafeImage";
 
 interface ChannelsTableProps {
   initialTab?: string;
@@ -539,17 +540,12 @@ export default function ChannelsTable({
                       {/* Creator Profile */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          {channel.profile_photo_url ? (
-                            <img
-                              src={channel.profile_photo_url}
-                              alt=""
-                              className="w-8 h-8 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
-                              {channel.channel_name.charAt(0)}
-                            </div>
-                          )}
+                          <CreatorAvatar
+                            src={channel.profile_photo_url}
+                            name={channel.channel_name}
+                            className="w-8 h-8 rounded-full object-cover bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                            initialsClassName="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0 ring-1 ring-slate-700"
+                          />
                           <div className="min-w-0 max-w-[200px]">
                             <div className="font-semibold text-white truncate text-xs flex items-center gap-1.5">
                               <span className="truncate">{channel.channel_name}</span>
@@ -595,17 +591,12 @@ export default function ChannelsTable({
                             className="flex items-center gap-2 group/video max-w-[220px]"
                             title={channel.discovery_video_title || "Watch video"}
                           >
-                            {channel.discovery_thumbnail_url ? (
-                              <img
-                                src={channel.discovery_thumbnail_url}
-                                alt=""
-                                className="w-12 h-7 object-cover rounded bg-slate-800 ring-1 ring-slate-700 shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-7 bg-slate-800 rounded flex items-center justify-center text-slate-500 shrink-0">
-                                <Video className="w-3.5 h-3.5" />
-                              </div>
-                            )}
+                            <VideoThumbnail
+                              src={channel.discovery_thumbnail_url}
+                              title={channel.discovery_video_title || "Discovery video"}
+                              className="w-12 h-7 object-cover rounded bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                              fallbackClassName="w-12 h-7 bg-slate-800 rounded flex items-center justify-center text-slate-500 shrink-0 ring-1 ring-slate-700/50"
+                            />
                             <span className="text-[11px] text-slate-300 group-hover/video:text-indigo-400 truncate font-medium">
                               {channel.discovery_video_title || "Discovery video"}
                             </span>
