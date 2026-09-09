@@ -7,10 +7,11 @@ module.exports = {
       name: "aikido-web",
       cwd: "/srv/ima/safwano/main-tool/website/aikido-ima",
       script: "npm",
-      args: "start -- -p 3000",
+      args: "start -- -p 3000 -H 0.0.0.0",
       env: {
         NODE_ENV: "production",
         PORT: "3000",
+        HOSTNAME: "0.0.0.0",
       },
       instances: 1,
       autorestart: true,
@@ -23,8 +24,12 @@ module.exports = {
     {
       name: "fylint-api",
       cwd: "/srv/ima/safwano",
-      script: "/srv/ima/safwano/.venv/bin/python",
-      args: "main-tool/email_generation/api_server.py --port 8000 --host 127.0.0.1",
+      script: "main-tool/email_generation/api_server.py",
+      interpreter: "/srv/ima/safwano/.venv/bin/python",
+      args: "--port 8000 --host 0.0.0.0",
+      env: {
+        PYTHONUNBUFFERED: "1",
+      },
       instances: 1,
       autorestart: true,
       watch: false,
