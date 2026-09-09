@@ -506,6 +506,15 @@ def _download_audio(
             }
         }
 
+    # Pass proxy if one was recently verified to bypass datacenter IP blocks
+    try:
+        from .proxy_manager import get_last_working_proxy
+        last_proxy = get_last_working_proxy()
+        if last_proxy:
+            ydl_opts["proxy"] = f"http://{last_proxy}"
+    except Exception:
+        pass
+
     # Trim to first max_seconds without downloading the rest of the stream
     if max_seconds is not None:
         ydl_opts["download_ranges"] = yt_dlp.utils.download_range_func(
