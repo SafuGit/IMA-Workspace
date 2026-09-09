@@ -198,11 +198,43 @@ def _clean_vtt(vtt_path: Path) -> str:
     return "\n".join(grouped_blocks)
 
 
+def _get_cookies_path() -> str | None:
+    """Find a cookies.txt file if available for YouTube authentication."""
+    cookies_path = os.getenv("YOUTUBE_COOKIES_PATH")
+    if cookies_path and os.path.exists(cookies_path):
+        return str(cookies_path)
+    for candidate in [
+        Path.cwd() / "cookies.txt",
+        Path(__file__).resolve().parent.parent / "cookies.txt",
+        Path(__file__).resolve().parent.parent.parent / "cookies.txt",
+    ]:
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def _get_session_with_cookies() -> requests.Session:
+    """Build a requests.Session, loading cookies.txt if available."""
+    session = requests.Session()
+    session.headers.update({"Accept-Language": "en-US,en;q=0.9"})
+    cookies_file = _get_cookies_path()
+    if cookies_file:
+        try:
+            import http.cookiejar
+            cj = http.cookiejar.MozillaCookieJar(cookies_file)
+            cj.load(ignore_discard=True, ignore_expires=True)
+            session.cookies = cj
+        except Exception as e:
+            print(f"      [cookies] Warning loading {cookies_file}: {e}")
+    return session
+
+
 def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str | None:
     """Fetch captions using youtube_transcript_api (bypasses datacenter bot blocks)."""
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
-        api = YouTubeTranscriptApi()
+        session = _get_session_with_cookies()
+        api = YouTubeTranscriptApi(http_client=session)
         tl = api.list(video_id)
         t = None
         # 1. Try manual transcript in requested language
@@ -227,6 +259,7 @@ def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str |
             t = next(iter(tl), None)
 
         if not t:
+            print("      [captions] No transcript track found in video metadata.")
             return None
 
         snippets = t.fetch()
@@ -261,7 +294,11 @@ def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str |
             grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
 
         return "\n".join(grouped_blocks) if grouped_blocks else None
-    except Exception:
+    except ImportError:
+        print("      [captions] ⚠ youtube_transcript_api is not installed in this Python environment (run: pip install youtube-transcript-api)")
+        return None
+    except Exception as e:
+        print(f"      [captions] ⚠ youtube_transcript_api failed ({type(e).__name__}): {e}")
         return None
 
 
@@ -318,6 +355,10 @@ def _check_captions(url: str, lang: str = "en") -> str | None:
             "--quiet",
             "--no-warnings",
         ]
+
+        cookies_file = _get_cookies_path()
+        if cookies_file:
+            base_args.extend(["--cookies", cookies_file])
 
         # ── Attempt 1: no Deno required ─────────────────────────────────────
         subprocess.run(
@@ -401,17 +442,8 @@ def _download_audio(
     }
 
     # Automatically detect cookies.txt to bypass datacenter bot detection
-    cookies_file = os.getenv("YOUTUBE_COOKIES_PATH")
-    if not cookies_file:
-        for candidate in [
-            Path.cwd() / "cookies.txt",
-            Path(__file__).resolve().parent.parent / "cookies.txt",
-            Path(__file__).resolve().parent.parent.parent / "cookies.txt",
-        ]:
-            if candidate.exists():
-                cookies_file = str(candidate)
-                break
-    if cookies_file and os.path.exists(cookies_file):
+    cookies_file = _get_cookies_path()
+    if cookies_file:
         ydl_opts["cookiefile"] = str(cookies_file)
 
     # Trim to first max_seconds without downloading the rest of the stream
