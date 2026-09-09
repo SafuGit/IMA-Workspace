@@ -7,6 +7,7 @@ Used to bypass datacenter IP restrictions on the YouTube Transcript API.
 
 import os
 import sys
+import re
 import time
 import urllib.request
 import concurrent.futures
@@ -136,15 +137,151 @@ def test_proxy_for_youtube(proxy_str: str, timeout: float = 3.5) -> bool:
     except Exception:
         return False
 
+def fetch_proxydb_proxies(limit: int = 60) -> list[str]:
+    """Fetch high-anonymity HTTPS/HTTP proxies directly from ProxyDB (https://proxydb.net/).
+
+    Parses href="/IP/PORT#PROTOCOL" links to cleanly bypass hidden honeypot elements.
+    Returns a list of 'ip:port' strings.
+    """
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    seen: set[str] = set()
+    proxies: list[str] = []
+
+    for offset in (0, 15, 30, 45):
+        url = f"https://proxydb.net/?protocol=https&protocol=http&anonlvl=3&anonlvl=4&offset={offset}"
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                html = resp.read().decode("utf-8", errors="ignore")
+                matches = re.findall(
+                    r'href="/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]+)#([a-zA-Z0-9]+)"',
+                    html,
+                )
+                for ip, port, _proto in matches:
+                    p = f"{ip}:{port}"
+                    if p not in seen:
+                        seen.add(p)
+                        proxies.append(p)
+                        if len(proxies) >= limit:
+                            return proxies
+        except Exception:
+            continue
+    return proxies
+
+
+def _save_working_proxy_safe(proxy_str: str) -> None:
+    """Best-effort insertion/update of a verified working proxy into PostgreSQL."""
+    try:
+        parts = proxy_str.split(":")
+        if len(parts) != 2:
+            return
+        ip, port = parts[0], int(parts[1])
+        conn = get_db_connection()
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO proxies (ip, port, protocol, is_active, failure_count, last_used_at)
+                    VALUES (%s, %s, 'http', TRUE, 0, now())
+                    ON CONFLICT (ip, port) DO UPDATE
+                    SET is_active = TRUE, failure_count = 0, last_used_at = now(), updated_at = now()
+                    """,
+                    (ip, port),
+                )
+        conn.close()
+    except Exception:
+        pass
+
+
+def fetch_captions_via_proxydb(
+    video_id: str,
+    lang: str = "en",
+    max_workers: int = 15,
+    probe_timeout: float = 3.5,
+) -> tuple[list[Any] | None, str | None]:
+    """Fetch captions for a YouTube video by rotating directly through fresh ProxyDB proxies.
+
+    Probes candidates concurrently with strict timeouts so dead proxies are dropped
+    immediately. As soon as a proxy successfully fetches the transcript, it returns
+    instantly and best-effort caches the working proxy into PostgreSQL.
+
+    Returns:
+        (snippets, winning_proxy_str) or (None, None).
+    """
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        from youtube_transcript_api.proxies import GenericProxyConfig
+        import requests
+    except ImportError:
+        return None, None
+
+    candidates = fetch_proxydb_proxies(limit=50)
+    if not candidates:
+        return None, None
+
+    print(f"      [proxies] Scraped {len(candidates)} fresh candidates from ProxyDB. Testing concurrently …")
+
+    def _worker(proxy: str):
+        proxy_url = f"http://{proxy}"
+        try:
+            cfg = GenericProxyConfig(http_url=proxy_url, https_url=proxy_url)
+            session = requests.Session()
+            session.proxies = cfg.to_requests_dict()
+            session.headers.update({
+                "Accept-Language": "en-US",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            })
+            r = session.get(f"https://www.youtube.com/watch?v={video_id}", timeout=probe_timeout)
+            if r.status_code == 200 and ("playabilityStatus" in r.text or "ytInitialPlayerResponse" in r.text):
+                api = YouTubeTranscriptApi(proxy_config=cfg, http_client=session)
+                tl = api.list(video_id)
+                t = None
+                try:
+                    t = tl.find_transcript([lang, f"{lang}-US", f"{lang}-GB", f"{lang}-orig"])
+                except Exception:
+                    pass
+                if not t:
+                    try:
+                        t = tl.find_generated_transcript([lang])
+                    except Exception:
+                        pass
+                if not t:
+                    t = next(iter(tl), None)
+                if t:
+                    snippets = t.fetch()
+                    return proxy, snippets
+        except Exception:
+            pass
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_worker, p): p for p in candidates}
+        for fut in concurrent.futures.as_completed(futures):
+            res = fut.result()
+            if res and res[1]:
+                winning_proxy, snippets = res
+                for f in futures:
+                    f.cancel()
+                _save_working_proxy_safe(winning_proxy)
+                return snippets, winning_proxy
+
+    return None, None
+
+
 def fetch_free_proxy_candidates(limit: int = 150) -> list[str]:
-    """Fetch raw proxy list candidates from public GitHub repositories."""
+    """Fetch raw proxy list candidates from ProxyDB and public GitHub repositories."""
+    candidates = fetch_proxydb_proxies(limit=limit // 2)
     sources = [
         "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
         "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
         "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=4000&country=all&ssl=all&anonymity=all",
     ]
-    candidates: list[str] = []
     for url in sources:
+        if len(candidates) >= limit:
+            break
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=4) as resp:

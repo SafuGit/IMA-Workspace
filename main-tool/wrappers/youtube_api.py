@@ -322,19 +322,18 @@ def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str |
         if not is_ip_blocked:
             print(f"      [captions] ⚠ Caption lookup error: {type(direct_err).__name__} - {direct_err}")
             return None
-        print("      [captions] ⚠ VPS IP is blocked by YouTube. Rotating through proxy pool …")
+        print("      [captions] ⚠ YouTube blocked datacenter IP (IpBlocked). Rotating proxies …")
 
-    # 2. Second attempt: Rotate through proxies from PostgreSQL `proxies` table
+    # 2. Second attempt: Check PostgreSQL `proxies` table first (if available)
     try:
-        from .proxy_manager import get_active_proxies, record_proxy_result, seed_working_proxies
+        from .proxy_manager import (
+            get_active_proxies,
+            record_proxy_result,
+            fetch_captions_via_proxydb,
+        )
         from youtube_transcript_api.proxies import GenericProxyConfig
 
-        proxies = get_active_proxies(limit=12)
-        if not proxies:
-            print("      [proxies] No active proxies in database. Auto-fetching fresh working proxies …")
-            seed_working_proxies(max_to_find=8)
-            proxies = get_active_proxies(limit=12)
-
+        proxies = get_active_proxies(limit=8)
         for p in proxies:
             proxy_url = f"{p['protocol']}://{p['ip']}:{p['port']}"
             try:
@@ -343,11 +342,19 @@ def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str |
                 snippets = _fetch_from_api_instance(api, video_id, lang)
                 if snippets:
                     record_proxy_result(p['id'], success=True)
-                    print(f"      [proxies] ✅ Retrieved transcript via proxy ({p['ip']}:{p['port']})")
+                    print(f"      [proxies] ✅ Retrieved transcript via cached proxy ({p['ip']}:{p['port']})")
                     return _format_snippets_into_blocks(snippets)
             except Exception:
                 record_proxy_result(p['id'], success=False)
                 continue
+
+        # 3. Third attempt: Scrape fresh live proxies directly from ProxyDB (https://proxydb.net/)
+        print("      [proxies] Fetching fresh proxies from ProxyDB (https://proxydb.net/) …")
+        snippets, win_proxy = fetch_captions_via_proxydb(video_id, lang=lang)
+        if snippets and win_proxy:
+            print(f"      [proxies] ✅ Retrieved transcript via ProxyDB ({win_proxy})")
+            return _format_snippets_into_blocks(snippets)
+
     except Exception as e:
         print(f"      [proxies] Proxy rotation encountered an error: {e}")
 
