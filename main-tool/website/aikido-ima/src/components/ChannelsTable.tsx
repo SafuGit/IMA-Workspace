@@ -21,8 +21,11 @@ import {
   ArrowDown,
   SlidersHorizontal,
   RotateCcw,
+  AlertCircle,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CreatorAvatar, VideoThumbnail } from "./SafeImage";
 
 interface ChannelsTableProps {
@@ -56,6 +59,44 @@ export default function ChannelsTable({
   // Reject modal state
   const [rejectingChannel, setRejectingChannel] = useState<YtChannel | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Email API setup prompt state
+  const router = useRouter();
+  const [showApiSetupPrompt, setShowApiSetupPrompt] = useState(false);
+  const [promptTargetChannel, setPromptTargetChannel] = useState<YtChannel | null>(null);
+
+  const handleGenerateEmailClick = async (channel: YtChannel) => {
+    let isConfigured = false;
+    try {
+      const cached = localStorage.getItem("fylint_email_api_settings");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.apiUrl && parsed.apiUrl.trim() !== "") {
+          isConfigured = true;
+        }
+      }
+    } catch {}
+
+    if (!isConfigured) {
+      try {
+        const res = await fetch("/api/settings?key=email_generation_api");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings && data.settings.apiUrl && data.settings.apiUrl.trim() !== "") {
+            isConfigured = true;
+            localStorage.setItem("fylint_email_api_settings", JSON.stringify(data.settings));
+          }
+        }
+      } catch {}
+    }
+
+    if (!isConfigured) {
+      setShowApiSetupPrompt(true);
+      setPromptTargetChannel(channel);
+    } else {
+      router.push(`/emails/generate?channelId=${channel.channel_id}`);
+    }
+  };
 
   const fetchChannels = useCallback(async () => {
     setLoading(true);
@@ -661,14 +702,15 @@ export default function ChannelsTable({
                             <Trash2 className="w-4 h-4" />
                           </button>
 
-                          {/* Send Email Action */}
-                          <Link
-                            href={`/emails?channelId=${channel.channel_id}`}
-                            title="View or Draft Outreach Email"
+                          {/* Generate Email Action */}
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateEmailClick(channel)}
+                            title="Generate Outreach Email"
                             className="p-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 transition-colors"
                           >
                             <Mail className="w-4 h-4" />
-                          </Link>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -711,6 +753,50 @@ export default function ChannelsTable({
         onClose={() => setRejectingChannel(null)}
         onConfirm={handleRejectConfirm}
       />
+
+      {/* API Setup Required Prompt Modal */}
+      {showApiSetupPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-white">Email Generation API Not Configured</h3>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                To generate personalized outreach emails for{" "}
+                <span className="text-slate-200 font-semibold">
+                  {promptTargetChannel?.channel_name || "this creator"}
+                </span>
+                , please configure your Bring-Your-Own (BYO) Email Generation API in Settings first.
+              </p>
+            </div>
+
+            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 font-mono">
+              Expected Endpoint: <span className="text-indigo-400">POST /api/generate-email</span>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowApiSetupPrompt(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <Link
+                href="/settings"
+                onClick={() => setShowApiSetupPrompt(false)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition-all"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Configure in Settings
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

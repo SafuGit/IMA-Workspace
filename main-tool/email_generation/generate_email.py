@@ -26,6 +26,10 @@ import sys
 import shutil
 import subprocess
 import re
+import json
+import argparse
+import urllib.request
+import urllib.error
 from pathlib import Path
 from typing import Any
 
@@ -332,6 +336,146 @@ def generate_hook_and_email(
     }
 
 
+def parse_generated_output(output: str, video_id: str = "") -> dict[str, Any]:
+    """Parse raw LLM output markdown into structured hooks, subject lines, and drafts."""
+    hooks: list[dict[str, Any]] = []
+    subject_lines: dict[str, str] = {"primary": "", "alternative_1": "", "alternative_2": ""}
+    drafts: dict[str, dict[str, Any]] = {}
+
+    # 1. Parse Hooks
+    hook_matches = re.finditer(
+        r"-\s+\*\*Hook\s+\d+\*\*\s*(?:`?\[?(comment-backed|transcript-only)\]?`?)?:\s*\"?([^\n\"]+)\"?\s*\n\s*-\s+\*\*Timestamp:?\*\*\s*([^\n]+)\s*\n\s*-\s+\*\*Video Link:?\*\*\s*([^\n]+)\s*\n\s*-\s+\*\*What happens:?\*\*\s*([^\n]+)",
+        output,
+        re.IGNORECASE,
+    )
+    rec_match = re.search(r"\*\*Recommendation:?\*\*\s*([^\n]+)", output, re.IGNORECASE)
+    recommendation = rec_match.group(1).strip() if rec_match else ""
+
+    for i, m in enumerate(hook_matches, 1):
+        tag = (m.group(1) or "transcript-only").lower()
+        text = m.group(2).strip().strip('"')
+        timestamp = m.group(3).strip()
+        link = m.group(4).strip()
+        what_happens = m.group(5).strip()
+        is_rec = f"Hook {i}" in recommendation or i == 1
+
+        hooks.append({
+            "tag": tag,
+            "text": text,
+            "timestamp": timestamp,
+            "video_link": link,
+            "what_happens": what_happens,
+            "is_recommended": is_rec,
+        })
+
+    # 2. Parse Subject Lines
+    subj_primary = re.search(r"-\s+\*\*Primary:?\*\*\s*([^\n]+)", output, re.IGNORECASE)
+    subj_alt1 = re.search(r"-\s+\*\*Alternative\s*1:?\*\*\s*([^\n]+)", output, re.IGNORECASE)
+    subj_alt2 = re.search(r"-\s+\*\*Alternative\s*2:?\*\*\s*([^\n]+)", output, re.IGNORECASE)
+
+    if subj_primary:
+        subject_lines["primary"] = subj_primary.group(1).strip()
+    if subj_alt1:
+        subject_lines["alternative_1"] = subj_alt1.group(1).strip()
+    if subj_alt2:
+        subject_lines["alternative_2"] = subj_alt2.group(1).strip()
+
+    # 3. Parse Drafts
+    draft_patterns = [
+        ("option_a", "Viewer Trust & Monetization", r"####\s+Option A[^\n]*:\s*\n(.*?)(?=####\s+Option B|\Z)"),
+        ("option_b", "Software Category Fit", r"####\s+Option B[^\n]*:\s*\n(.*?)(?=####\s+Option C|\Z)"),
+        ("option_c", "Production Pipeline & Calendar", r"####\s+Option C[^\n]*:\s*\n(.*?)(?=\Z)"),
+    ]
+
+    for key, name, pat in draft_patterns:
+        match = re.search(pat, output, re.DOTALL | re.IGNORECASE)
+        if match:
+            body = match.group(1).strip()
+            word_count = len(body.split())
+            subj = subject_lines.get(
+                "primary" if key == "option_a" else ("alternative_1" if key == "option_b" else "alternative_2"),
+                ""
+            )
+            drafts[key] = {
+                "name": name,
+                "subject": subj,
+                "body": body,
+                "word_count": word_count,
+            }
+
+    return {
+        "hooks": hooks,
+        "recommendation": recommendation,
+        "subject_lines": subject_lines,
+        "drafts": drafts,
+    }
+
+
+def generate_email_pipeline(
+    url_or_id: str,
+    model: str = "gemini-3.1-pro-high",
+    api_url: str | None = None,
+    api_key: str | None = None,
+    timeout: int = 180,
+) -> dict[str, Any]:
+    """
+    Unified entrypoint for all 3 calling methods:
+      1) API calling: When `api_url` is passed, delegates to the configured API.
+      2) CLI: Invoked via command line.
+      3) Function calling: Direct Python import and execution.
+
+    Returns the fixed output schema dictionary.
+    """
+    if api_url:
+        print(f"\n[API] Calling external Email Generation API at: {api_url} …")
+        payload = {
+            "video_url": f"https://www.youtube.com/watch?v={url_or_id}" if not url_or_id.startswith("http") else url_or_id,
+            "model": model,
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Fylint-Outreach-Client/1.0",
+        }
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+            headers["X-API-Key"] = api_key
+
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(api_url, data=data_bytes, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                resp_json = json.loads(resp.read().decode("utf-8"))
+                return resp_json
+        except Exception as e:
+            raise RuntimeError(f"Failed to call external API at {api_url}: {e}") from e
+
+    result = run_pipeline(url_or_id, model=model)
+    raw_output = result.get("raw_output", "")
+    video_id = result.get("video_id", "")
+    parsed = parse_generated_output(raw_output, video_id=video_id)
+
+    return {
+        "success": True,
+        "video_id": video_id,
+        "title": result.get("title", ""),
+        "channel_id": result.get("channel_id", ""),
+        "channel_name": result.get("channel_name", ""),
+        "hooks": parsed["hooks"],
+        "recommendation": parsed.get("recommendation", ""),
+        "subject_lines": parsed["subject_lines"],
+        "drafts": parsed["drafts"],
+        "raw_output": raw_output,
+        "video_data": {
+            "title": result.get("title", ""),
+            "channel_title": result.get("channel_name", ""),
+            "view_count": result.get("view_count", 0),
+            "comment_count": result.get("comment_count", 0),
+            "thumbnail_url": result.get("thumbnail_url", ""),
+            "has_captions": bool(result.get("transcript")),
+        },
+    }
+
+
 def run_pipeline(
     url_or_id: str,
     model: str = "gemini-3.1-pro-high",
@@ -367,14 +511,27 @@ def _print_pipeline_result(result: dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        target_url = sys.argv[1].strip()
-    else:
-        target_url = input("Enter YouTube URL or Video ID: ").strip()
+    parser = argparse.ArgumentParser(description="Fylint YouTube Outreach Pipeline")
+    parser.add_argument("url", nargs="?", help="YouTube URL or Video ID")
+    parser.add_argument("--model", default="gemini-3.1-pro-high", help="Model name (default: gemini-3.1-pro-high)")
+    parser.add_argument("--api-url", default=None, help="Optional external API URL to delegate generation to")
+    parser.add_argument("--api-key", default=None, help="Optional API key for external API")
+    parser.add_argument("--json", action="store_true", help="Output result as JSON")
+    args = parser.parse_args()
 
+    target_url = args.url or input("Enter YouTube URL or Video ID: ").strip()
     if not target_url:
         print("No URL provided. Exiting.")
         sys.exit(1)
 
-    res = run_pipeline(target_url)
-    _print_pipeline_result(res)
+    res = generate_email_pipeline(
+        target_url,
+        model=args.model,
+        api_url=args.api_url,
+        api_key=args.api_key,
+    )
+
+    if args.json:
+        print(json.dumps(res, indent=2, ensure_ascii=False))
+    else:
+        _print_pipeline_result(res)

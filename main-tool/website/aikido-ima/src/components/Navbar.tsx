@@ -12,6 +12,7 @@ import {
   Database,
   Lock,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ export default function Navbar({ dbHost, dbName, isSshTunnel, sshHost }: NavbarP
     { label: "Keywords", href: "/keywords", icon: Search },
     { label: "Generated Emails", href: "/emails", icon: Mail },
     { label: "Statistics", href: "/statistics", icon: BarChart3 },
+    { label: "Settings", href: "/settings", icon: Settings },
   ];
 
   return (

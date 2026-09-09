@@ -116,3 +116,62 @@ export interface DashboardStats {
   avgEngagementRate: number;
   avgViews: number;
 }
+
+export interface EmailApiSettings {
+  apiUrl: string;
+  apiKey?: string;
+  model?: string;
+  timeoutSeconds?: number;
+  additionalInstructions?: string;
+  enabled?: boolean;
+}
+
+export interface GeneratedHook {
+  tag: "comment-backed" | "transcript-only" | string;
+  text: string;
+  timestamp: string;
+  video_link: string;
+  what_happens: string;
+  is_recommended: boolean;
+}
+
+export interface GeneratedSubjectLines {
+  primary: string;
+  alternative_1: string;
+  alternative_2: string;
+}
+
+export interface GeneratedDraft {
+  name: string;
+  subject: string;
+  body: string;
+  word_count: number;
+}
+
+export interface GeneratedEmailResponse {
+  success: boolean;
+  video_id: string;
+  title: string;
+  channel_id?: string;
+  channel_name?: string;
+  hooks: GeneratedHook[];
+  recommendation?: string;
+  subject_lines: GeneratedSubjectLines;
+  drafts: {
+    option_a?: GeneratedDraft;
+    option_b?: GeneratedDraft;
+    option_c?: GeneratedDraft;
+    [key: string]: GeneratedDraft | undefined;
+  };
+  raw_output?: string;
+  video_data?: {
+    title: string;
+    channel_title?: string;
+    view_count?: number;
+    comment_count?: number;
+    thumbnail_url?: string;
+    has_captions?: boolean;
+  };
+  error?: string;
+}
+
