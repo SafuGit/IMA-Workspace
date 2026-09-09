@@ -143,20 +143,27 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
         sys.stderr.write(f"[HTTP] {self.address_string()} - {format % args}\n")
 
 
+class ReusableHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
+
 def run_server(host: str = "0.0.0.0", port: int = 8000):
     """Run the standalone HTTP server."""
     server_address = (host, port)
-    httpd = HTTPServer(server_address, EmailGenerationApiHandler)
-    print("=" * 60)
-    print("  Fylint Email Generation API Server")
-    print(f"  Listening on: http://{host}:{port}")
-    print(f"  Endpoint    : http://{host}:{port}/api/generate-email")
-    print(f"  Healthcheck : http://{host}:{port}/health")
-    print("=" * 60)
+    httpd = ReusableHTTPServer(server_address, EmailGenerationApiHandler)
+    print("=" * 60, flush=True)
+    print("  Fylint Email Generation API Server", flush=True)
+    print(f"  Listening on: http://{host}:{port}", flush=True)
+    print(f"  Endpoint    : http://{host}:{port}/api/generate-email", flush=True)
+    print(f"  Healthcheck : http://{host}:{port}/health", flush=True)
+    print("=" * 60, flush=True)
     try:
         httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nServer shutting down.")
+    except (KeyboardInterrupt, SystemExit):
+        print("\n[INFO] Shutdown signal received. Closing server...", flush=True)
+    except Exception as e:
+        print(f"\n[ERROR] Server encountered error: {e}", file=sys.stderr, flush=True)
+    finally:
         httpd.server_close()
 
 
