@@ -94,7 +94,11 @@ export default function ChannelsTable({
       setShowApiSetupPrompt(true);
       setPromptTargetChannel(channel);
     } else {
-      router.push(`/emails/generate?channelId=${channel.channel_id}`);
+      const params = new URLSearchParams({ channelId: channel.channel_id });
+      if (channel.discovery_video_id) {
+        params.set("videoUrl", `https://www.youtube.com/watch?v=${channel.discovery_video_id}`);
+      }
+      router.push(`/emails/generate?${params.toString()}`);
     }
   };
 

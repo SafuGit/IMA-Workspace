@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Star,
   Layers,
+  Compass,
 } from "lucide-react";
 
 interface GenerateEmailViewProps {
@@ -39,6 +40,7 @@ export default function GenerateEmailView({
 }: GenerateEmailViewProps) {
   const [channel, setChannel] = useState<YtChannel | null>(null);
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl || "");
+  const [showCustomUrlInput, setShowCustomUrlInput] = useState(false);
   const [loadingChannel, setLoadingChannel] = useState(Boolean(channelId));
   const [apiConfigured, setApiConfigured] = useState<boolean | null>(null);
   const [apiUrl, setApiUrl] = useState<string>("");
@@ -56,6 +58,14 @@ export default function GenerateEmailView({
   const [copiedBody, setCopiedBody] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Discovery video detection
+  const hasDiscoveryVideo = Boolean(channel?.discovery_video_id);
+  const effectiveVideoUrl =
+    videoUrl.trim() ||
+    (channel?.discovery_video_id
+      ? `https://www.youtube.com/watch?v=${channel.discovery_video_id}`
+      : "");
 
   // Check API configuration
   useEffect(() => {
@@ -104,11 +114,11 @@ export default function GenerateEmailView({
           const data = await res.json();
           if (data.channel) {
             setChannel(data.channel);
-            if (!videoUrl) {
-              const url = data.channel.discovery_video_id
-                ? `https://www.youtube.com/watch?v=${data.channel.discovery_video_id}`
-                : "";
-              setVideoUrl(url);
+            if (data.channel.discovery_video_id) {
+              const discUrl = `https://www.youtube.com/watch?v=${data.channel.discovery_video_id}`;
+              if (!initialVideoUrl) {
+                setVideoUrl(discUrl);
+              }
             }
           }
         }
@@ -120,13 +130,18 @@ export default function GenerateEmailView({
     }
 
     fetchChannel();
-  }, [channelId]);
+  }, [channelId, initialVideoUrl]);
 
   // Handle generation call
   const handleGenerate = async () => {
-    if (!videoUrl) {
+    const targetUrl = effectiveVideoUrl.trim();
+    if (!targetUrl) {
       setError("Please enter or select a YouTube video URL.");
       return;
+    }
+
+    if (!videoUrl) {
+      setVideoUrl(targetUrl);
     }
 
     setGenerating(true);
@@ -142,7 +157,7 @@ export default function GenerateEmailView({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          videoUrl: videoUrl.trim(),
+          videoUrl: targetUrl,
           channelId: channel?.channel_id,
           channelName: channel?.channel_name,
         }),
@@ -309,49 +324,165 @@ export default function GenerateEmailView({
         </div>
       )}
 
-      {/* Target Video & Generator Bar */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <Video className="w-3.5 h-3.5 text-indigo-400" /> Target YouTube Video URL
-            </span>
-            {channel?.discovery_video_title && (
-              <span className="text-[11px] text-slate-500 truncate max-w-[300px]">
-                Discovery: {channel.discovery_video_title}
-              </span>
-            )}
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2.5">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-slate-100 placeholder-slate-600 font-mono transition-all"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={generating || !videoUrl || apiConfigured === false}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-50 shrink-0"
-            >
-              {generating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Generating…</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Generate Outreach Email</span>
-                </>
-              )}
-            </button>
-          </div>
+      {/* Channel Loading Skeleton */}
+      {loadingChannel && !channel && (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl flex items-center justify-center gap-3 text-xs text-slate-400">
+          <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+          <span>Loading creator details and discovery video...</span>
         </div>
+      )}
+
+      {/* Target Video & Generator Section */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        {hasDiscoveryVideo && !showCustomUrlInput ? (
+          /* State 1: Discovery Video exists -> Use Discovery Video automatically, no manual input needed */
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  <Compass className="w-3.5 h-3.5 text-indigo-400" />
+                  Auto-Selected Discovery Video
+                </span>
+                <span className="hidden sm:inline text-xs text-slate-500">
+                  Targeted automatically from keyword discovery
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCustomUrlInput(true)}
+                className="text-xs text-slate-400 hover:text-indigo-300 transition-colors underline decoration-slate-700 hover:decoration-indigo-400"
+              >
+                Use a different video URL
+              </button>
+            </div>
+
+            {/* Prominent Video Display Card */}
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <VideoThumbnail
+                  src={channel?.discovery_thumbnail_url}
+                  title={channel?.discovery_video_title || "Discovery Video"}
+                  className="w-20 h-12 object-cover rounded-lg bg-slate-800 ring-1 ring-slate-700 shrink-0"
+                  fallbackClassName="w-20 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 shrink-0 ring-1 ring-slate-700/50"
+                />
+                <div className="min-w-0 space-y-1">
+                  <h2 className="text-sm font-bold text-white leading-tight truncate md:whitespace-normal line-clamp-1">
+                    {channel?.discovery_video_title || "Discovery Video"}
+                  </h2>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-500 font-medium">Fetching Link:</span>
+                    <a
+                      href={effectiveVideoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-mono underline truncate max-w-[280px] sm:max-w-md transition-colors"
+                      title={effectiveVideoUrl}
+                    >
+                      <span>{effectiveVideoUrl}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating || !effectiveVideoUrl || apiConfigured === false}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-50 shrink-0"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating…</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Generate Outreach Email</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* State 2: No discovery video exists OR user opted to input a custom link */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <label className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5 text-indigo-400" />
+                {hasDiscoveryVideo ? "Custom Target YouTube Video URL" : "Target YouTube Video URL"}
+              </label>
+              {hasDiscoveryVideo && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomUrlInput(false);
+                    if (channel?.discovery_video_id) {
+                      setVideoUrl(`https://www.youtube.com/watch?v=${channel.discovery_video_id}`);
+                    }
+                  }}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  &larr; Revert to discovery video
+                </button>
+              )}
+            </div>
+
+            {!hasDiscoveryVideo && channel && (
+              <p className="text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-lg">
+                No discovery video was saved for this creator during search. Please provide a YouTube video URL below to analyze:
+              </p>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-slate-100 placeholder-slate-600 font-mono transition-all"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating || !effectiveVideoUrl || apiConfigured === false}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-50 shrink-0"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating…</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Generate Outreach Email</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Preview of fetching link when typed */}
+            {effectiveVideoUrl && (
+              <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">
+                <span className="text-slate-500 font-medium">Link being fetched:</span>
+                <a
+                  href={effectiveVideoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-400 hover:text-indigo-300 font-mono underline inline-flex items-center gap-1 truncate max-w-md"
+                >
+                  <span>{effectiveVideoUrl}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* API Status Pill */}
         <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
@@ -375,15 +506,45 @@ export default function GenerateEmailView({
           </Link>
         </div>
 
-        {/* Live Step Progress Indicator */}
+        {/* Live Step Progress Indicator with Fetching Link Context */}
         {generating && (
-          <div className="p-4 bg-slate-950 rounded-xl border border-indigo-500/30 space-y-3 animate-in fade-in">
+          <div className="p-4 bg-slate-950 rounded-xl border border-indigo-500/30 space-y-3.5 animate-in fade-in">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
               <span className="flex items-center gap-2 text-indigo-400">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Pipeline Running
+                Pipeline Active
               </span>
-              <span className="text-[11px] text-slate-400">Step {step} of 3</span>
+              <span className="text-[11px] text-slate-400 font-mono">Step {step} of 3</span>
+            </div>
+
+            {/* Prominent URL / video being fetched */}
+            <div className="p-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5 text-indigo-400" />
+                  Currently Fetching Video
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                  {hasDiscoveryVideo && !showCustomUrlInput ? "Discovery Video" : "Target URL"}
+                </span>
+              </div>
+              {channel?.discovery_video_title && (
+                <div className="text-xs font-bold text-white truncate">
+                  {channel.discovery_video_title}
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="text-slate-400 font-sans">URL:</span>
+                <a
+                  href={effectiveVideoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1 truncate max-w-lg"
+                >
+                  <span>{effectiveVideoUrl}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
             </div>
 
             <div className="space-y-2 text-xs">
@@ -415,6 +576,31 @@ export default function GenerateEmailView({
       {/* Results View */}
       {response && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+          {/* Target Video Confirmed Banner */}
+          <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                <Video className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Outreach Generated For Target Video
+                </div>
+                <div className="text-sm font-bold text-white mt-0.5">
+                  {response.title || channel?.discovery_video_title || "Target Video"}
+                </div>
+              </div>
+            </div>
+            <a
+              href={`https://www.youtube.com/watch?v=${response.video_id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              <span>https://www.youtube.com/watch?v={response.video_id}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
           {/* Section 1: Personalization Hooks */}
           <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
