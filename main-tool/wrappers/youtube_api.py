@@ -198,10 +198,22 @@ def _clean_vtt(vtt_path: Path) -> str:
     return "\n".join(grouped_blocks)
 
 
+def _ensure_netscape_cookies(path: Path) -> None:
+    """Ensure the cookies.txt file begins with the required Netscape header."""
+    try:
+        content = path.read_text(encoding="utf-8", errors="ignore").strip()
+        if content and not content.startswith("# Netscape HTTP Cookie File"):
+            header = "# Netscape HTTP Cookie File\n# https://curl.se/docs/http-cookies.html\n\n"
+            path.write_text(header + content + "\n", encoding="utf-8")
+    except Exception:
+        pass
+
+
 def _get_cookies_path() -> str | None:
     """Find a cookies.txt file if available for YouTube authentication."""
     cookies_path = os.getenv("YOUTUBE_COOKIES_PATH")
     if cookies_path and os.path.exists(cookies_path):
+        _ensure_netscape_cookies(Path(cookies_path))
         return str(cookies_path)
     for candidate in [
         Path.cwd() / "cookies.txt",
@@ -209,6 +221,7 @@ def _get_cookies_path() -> str | None:
         Path(__file__).resolve().parent.parent.parent / "cookies.txt",
     ]:
         if candidate.exists():
+            _ensure_netscape_cookies(candidate)
             return str(candidate)
     return None
 
@@ -349,10 +362,9 @@ def _check_captions(url: str, lang: str = "en") -> str | None:
             "--write-auto-sub",             # auto-generated captions
             "--write-sub",                  # also grab manual subs if present
             "--skip-download",
-            "--sub-lang", f"{lang}.*",      # en.* → en, en-orig, en-US, etc.
+            "--sub-lang", f"{lang}.*,{lang}", # en.*, en
             "--sub-format", "vtt/best",     # prefer native VTT — no ffmpeg needed
             "--output", output_template,
-            "--quiet",
             "--no-warnings",
         ]
 
@@ -361,7 +373,7 @@ def _check_captions(url: str, lang: str = "en") -> str | None:
             base_args.extend(["--cookies", cookies_file])
 
         # ── Attempt 1: no Deno required ─────────────────────────────────────
-        subprocess.run(
+        proc1 = subprocess.run(
             base_args + [canonical_url],
             capture_output=True,
             text=True,
@@ -423,12 +435,7 @@ def _download_audio(
     output_template = os.path.join(output_dir, f"{video_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "bestaudio/best",
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["ios", "mweb", "android"]
-            }
-        },
+        "format": "bestaudio/best/ba*/b*",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "m4a",
@@ -445,6 +452,13 @@ def _download_audio(
     cookies_file = _get_cookies_path()
     if cookies_file:
         ydl_opts["cookiefile"] = str(cookies_file)
+    else:
+        # Fallback clients when no cookies are provided
+        ydl_opts["extractor_args"] = {
+            "youtube": {
+                "player_client": ["android", "web"]
+            }
+        }
 
     # Trim to first max_seconds without downloading the rest of the stream
     if max_seconds is not None:
