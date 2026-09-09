@@ -242,77 +242,116 @@ def _get_session_with_cookies() -> requests.Session:
     return session
 
 
-def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str | None:
-    """Fetch captions using youtube_transcript_api (bypasses datacenter bot blocks)."""
+def _format_snippets_into_blocks(snippets) -> str | None:
+    if not snippets:
+        return None
+    grouped_blocks: list[str] = []
+    last_block_sec = -999
+    curr_block_text: list[str] = []
+    curr_block_ts = "00:00"
+
+    for s in snippets:
+        sec = int(s.start)
+        mins = sec // 60
+        secs = sec % 60
+        ts = f"{mins:02d}:{secs:02d}"
+        text = s.text.replace("\n", " ").strip()
+        if not text:
+            continue
+
+        if sec - last_block_sec >= 15:
+            if curr_block_text:
+                grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+            curr_block_ts = ts
+            last_block_sec = sec
+            curr_block_text = [text]
+        else:
+            curr_block_text.append(text)
+
+    if curr_block_text:
+        grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+
+    return "\n".join(grouped_blocks) if grouped_blocks else None
+
+
+def _fetch_from_api_instance(api, video_id: str, lang: str = "en"):
+    tl = api.list(video_id)
+    t = None
     try:
-        from youtube_transcript_api import YouTubeTranscriptApi
-        session = _get_session_with_cookies()
-        api = YouTubeTranscriptApi(http_client=session)
-        tl = api.list(video_id)
-        t = None
-        # 1. Try manual transcript in requested language
+        t = tl.find_transcript([lang, f"{lang}-US", f"{lang}-GB", f"{lang}-orig"])
+    except Exception:
+        pass
+    if not t:
         try:
-            t = tl.find_transcript([lang, f"{lang}-US", f"{lang}-GB", f"{lang}-orig"])
+            t = tl.find_generated_transcript([lang])
         except Exception:
             pass
-        # 2. Try auto-generated transcript in requested language
-        if not t:
-            try:
-                t = tl.find_generated_transcript([lang])
-            except Exception:
-                pass
-        # 3. Try matching any transcript beginning with lang code
-        if not t:
-            for item in tl:
-                if getattr(item, "language_code", "").startswith(lang):
-                    t = item
-                    break
-        # 4. Fallback to first available transcript
-        if not t:
-            t = next(iter(tl), None)
+    if not t:
+        for item in tl:
+            if getattr(item, "language_code", "").startswith(lang):
+                t = item
+                break
+    if not t:
+        t = next(iter(tl), None)
+    if not t:
+        return None
+    return t.fetch()
 
-        if not t:
-            print("      [captions] No transcript track found in video metadata.")
-            return None
 
-        snippets = t.fetch()
-        if not snippets:
-            return None
-
-        # Group into ~15-second blocks with [MM:SS] timestamps
-        grouped_blocks: list[str] = []
-        last_block_sec = -999
-        curr_block_text: list[str] = []
-        curr_block_ts = "00:00"
-
-        for s in snippets:
-            sec = int(s.start)
-            mins = sec // 60
-            secs = sec % 60
-            ts = f"{mins:02d}:{secs:02d}"
-            text = s.text.replace("\n", " ").strip()
-            if not text:
-                continue
-
-            if sec - last_block_sec >= 15:
-                if curr_block_text:
-                    grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
-                curr_block_ts = ts
-                last_block_sec = sec
-                curr_block_text = [text]
-            else:
-                curr_block_text.append(text)
-
-        if curr_block_text:
-            grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
-
-        return "\n".join(grouped_blocks) if grouped_blocks else None
+def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str | None:
+    """Fetch captions using youtube_transcript_api with automatic proxy rotation on IpBlocked."""
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
     except ImportError:
-        print("      [captions] ⚠ youtube_transcript_api is not installed in this Python environment (run: pip install youtube-transcript-api)")
+        print("      [captions] ⚠ youtube_transcript_api is not installed (run: pip install youtube-transcript-api)")
         return None
+
+    # 1. First attempt: Direct / cookie-authenticated session
+    try:
+        session = _get_session_with_cookies()
+        api = YouTubeTranscriptApi(http_client=session)
+        snippets = _fetch_from_api_instance(api, video_id, lang)
+        if snippets:
+            return _format_snippets_into_blocks(snippets)
+    except Exception as direct_err:
+        is_ip_blocked = (
+            "IpBlocked" in type(direct_err).__name__
+            or "RequestBlocked" in type(direct_err).__name__
+            or "blocking requests from your IP" in str(direct_err)
+        )
+        if not is_ip_blocked:
+            print(f"      [captions] ⚠ Caption lookup error: {type(direct_err).__name__} - {direct_err}")
+            return None
+        print("      [captions] ⚠ VPS IP is blocked by YouTube. Rotating through proxy pool …")
+
+    # 2. Second attempt: Rotate through proxies from PostgreSQL `proxies` table
+    try:
+        from .proxy_manager import get_active_proxies, record_proxy_result, seed_working_proxies
+        from youtube_transcript_api.proxies import GenericProxyConfig
+
+        proxies = get_active_proxies(limit=12)
+        if not proxies:
+            print("      [proxies] No active proxies in database. Auto-fetching fresh working proxies …")
+            seed_working_proxies(max_to_find=8)
+            proxies = get_active_proxies(limit=12)
+
+        for p in proxies:
+            proxy_url = f"{p['protocol']}://{p['ip']}:{p['port']}"
+            try:
+                cfg = GenericProxyConfig(http_url=proxy_url, https_url=proxy_url)
+                api = YouTubeTranscriptApi(proxy_config=cfg)
+                snippets = _fetch_from_api_instance(api, video_id, lang)
+                if snippets:
+                    record_proxy_result(p['id'], success=True)
+                    print(f"      [proxies] ✅ Retrieved transcript via proxy ({p['ip']}:{p['port']})")
+                    return _format_snippets_into_blocks(snippets)
+            except Exception:
+                record_proxy_result(p['id'], success=False)
+                continue
     except Exception as e:
-        print(f"      [captions] ⚠ youtube_transcript_api failed ({type(e).__name__}): {e}")
-        return None
+        print(f"      [proxies] Proxy rotation encountered an error: {e}")
+
+    return None
 
 
 def _check_captions(url: str, lang: str = "en") -> str | None:
