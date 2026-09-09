@@ -113,23 +113,12 @@ export async function GET(request: NextRequest) {
   }
 
   // Prepare upstream fetch headers
-  const isYouTubeDomain =
-    parsedUrl.hostname.includes("ytimg.com") ||
-    parsedUrl.hostname.includes("youtube.com") ||
-    parsedUrl.hostname.includes("ggpht.com") ||
-    parsedUrl.hostname.includes("googleusercontent.com");
-
   const upstreamHeaders: Record<string, string> = {
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
   };
-
-  // If fetching from YouTube/Google, supply youtube.com referer to satisfy CDN requirements
-  if (isYouTubeDomain) {
-    upstreamHeaders["Referer"] = "https://www.youtube.com/";
-  }
 
   try {
     let upstreamRes = await fetch(targetUrl, {
