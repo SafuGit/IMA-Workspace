@@ -198,16 +198,82 @@ def _clean_vtt(vtt_path: Path) -> str:
     return "\n".join(grouped_blocks)
 
 
+def _fetch_captions_via_transcript_api(video_id: str, lang: str = "en") -> str | None:
+    """Fetch captions using youtube_transcript_api (bypasses datacenter bot blocks)."""
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        api = YouTubeTranscriptApi()
+        tl = api.list(video_id)
+        t = None
+        # 1. Try manual transcript in requested language
+        try:
+            t = tl.find_transcript([lang, f"{lang}-US", f"{lang}-GB", f"{lang}-orig"])
+        except Exception:
+            pass
+        # 2. Try auto-generated transcript in requested language
+        if not t:
+            try:
+                t = tl.find_generated_transcript([lang])
+            except Exception:
+                pass
+        # 3. Try matching any transcript beginning with lang code
+        if not t:
+            for item in tl:
+                if getattr(item, "language_code", "").startswith(lang):
+                    t = item
+                    break
+        # 4. Fallback to first available transcript
+        if not t:
+            t = next(iter(tl), None)
+
+        if not t:
+            return None
+
+        snippets = t.fetch()
+        if not snippets:
+            return None
+
+        # Group into ~15-second blocks with [MM:SS] timestamps
+        grouped_blocks: list[str] = []
+        last_block_sec = -999
+        curr_block_text: list[str] = []
+        curr_block_ts = "00:00"
+
+        for s in snippets:
+            sec = int(s.start)
+            mins = sec // 60
+            secs = sec % 60
+            ts = f"{mins:02d}:{secs:02d}"
+            text = s.text.replace("\n", " ").strip()
+            if not text:
+                continue
+
+            if sec - last_block_sec >= 15:
+                if curr_block_text:
+                    grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+                curr_block_ts = ts
+                last_block_sec = sec
+                curr_block_text = [text]
+            else:
+                curr_block_text.append(text)
+
+        if curr_block_text:
+            grouped_blocks.append(f"[{curr_block_ts}] " + " ".join(curr_block_text))
+
+        return "\n".join(grouped_blocks) if grouped_blocks else None
+    except Exception:
+        return None
+
+
 def _check_captions(url: str, lang: str = "en") -> str | None:
     """
-    Download auto-generated captions for a YouTube video via yt-dlp and
+    Download auto-generated captions for a YouTube video and
     return the cleaned transcript as a plain string, or None if unavailable.
 
     Strategy:
+      Attempt 0 — youtube_transcript_api (instant, works on VPS/datacenter IPs, no yt-dlp).
       Attempt 1 — yt-dlp without --remote-components (no Deno needed).
-                  Works for the majority of videos.
       Attempt 2 — yt-dlp with --remote-components ejs:github (requires Deno).
-                  Fallback for videos behind YouTube's JS challenge protection.
 
     Args:
         url:  Full YouTube URL or raw video ID.
@@ -217,6 +283,12 @@ def _check_captions(url: str, lang: str = "en") -> str | None:
         Cleaned transcript string, or None if no captions are available.
     """
     video_id = _extract_video_id(url)
+
+    # ── Attempt 0: youtube_transcript_api (fastest, no bot check) ───────────
+    transcript_api_result = _fetch_captions_via_transcript_api(video_id, lang=lang)
+    if transcript_api_result:
+        return transcript_api_result
+
     canonical_url = f"https://www.youtube.com/watch?v={video_id}"
 
     with tempfile.TemporaryDirectory(prefix="yt_subs_") as tmp_dir:
@@ -313,7 +385,7 @@ def _download_audio(
         "format": "bestaudio/best",
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "web"]
+                "player_client": ["ios", "mweb", "android"]
             }
         },
         "postprocessors": [{
@@ -327,6 +399,20 @@ def _download_audio(
         "retries": 3,
         "fragment_retries": 3,
     }
+
+    # Automatically detect cookies.txt to bypass datacenter bot detection
+    cookies_file = os.getenv("YOUTUBE_COOKIES_PATH")
+    if not cookies_file:
+        for candidate in [
+            Path.cwd() / "cookies.txt",
+            Path(__file__).resolve().parent.parent / "cookies.txt",
+            Path(__file__).resolve().parent.parent.parent / "cookies.txt",
+        ]:
+            if candidate.exists():
+                cookies_file = str(candidate)
+                break
+    if cookies_file and os.path.exists(cookies_file):
+        ydl_opts["cookiefile"] = str(cookies_file)
 
     # Trim to first max_seconds without downloading the rest of the stream
     if max_seconds is not None:

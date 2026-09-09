@@ -266,22 +266,32 @@ def generate_hook_and_email(
     ]
 
     print(f"\n[AI] Running Antigravity CLI (agy) with model: {model} …")
+    output_chunks = []
     try:
-        result = subprocess.run(
+        process = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
-            timeout=timeout,
+            bufsize=1,
         )
+        if process.stdout:
+            for line in process.stdout:
+                sys.stdout.write(line)
+                sys.stdout.flush()
+                output_chunks.append(line)
+
+        process.wait(timeout=timeout)
+        if process.returncode != 0:
+            err_msg = "".join(output_chunks).strip()
+            raise RuntimeError(f"agy failed with exit code {process.returncode}: {err_msg}")
+
+        output = "".join(output_chunks).strip()
     except subprocess.TimeoutExpired as e:
+        if 'process' in locals():
+            process.kill()
         raise RuntimeError(f"agy execution timed out after {timeout} seconds") from e
-
-    if result.returncode != 0:
-        err_msg = result.stderr.strip() or result.stdout.strip()
-        raise RuntimeError(f"agy failed with exit code {result.returncode}: {err_msg}")
-
-    output = result.stdout.strip()
 
     # Parse sections if formatted with standard headers
     hooks_section = ""
