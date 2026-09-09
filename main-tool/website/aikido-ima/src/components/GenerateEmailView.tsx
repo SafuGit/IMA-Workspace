@@ -237,11 +237,18 @@ export default function GenerateEmailView({
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 3500);
       } else {
-        const err = await res.json();
-        alert(`Failed to save draft: ${err.error || "Unknown error"}`);
+        let errorMsg = "Failed to save draft";
+        try {
+          const err = await res.json();
+          errorMsg = err.error || errorMsg;
+        } catch {
+          errorMsg = `Server returned ${res.status} ${res.statusText || "Error"}`;
+        }
+        alert(`Failed to save draft: ${errorMsg}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save draft error:", err);
+      alert(`Error saving draft: ${err.message || err}`);
     } finally {
       setSavingDraft(false);
     }

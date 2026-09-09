@@ -64,3 +64,94 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      channel_id,
+      video_id,
+      video_title,
+      outreach_draft,
+      outreach_commentary,
+      transcript,
+      email_address,
+    } = body;
+
+    if (!channel_id) {
+      return NextResponse.json({ error: "Missing required 'channel_id'" }, { status: 400 });
+    }
+
+    if (!outreach_draft || typeof outreach_draft !== "string" || !outreach_draft.trim()) {
+      return NextResponse.json({ error: "Missing or empty 'outreach_draft'" }, { status: 400 });
+    }
+
+    // 1. Determine email address (either provided, or handle-based fallback)
+    let contactEmail = email_address?.trim();
+    if (!contactEmail) {
+      try {
+        const chRows = await query<{ channel_handle: string | null }>(
+          "SELECT channel_handle FROM yt_channels WHERE channel_id = $1",
+          [channel_id]
+        );
+        const handle = chRows[0]?.channel_handle?.replace(/^@/, "");
+        contactEmail = handle ? `${handle}@creators.youtube` : `contact@${channel_id}.com`;
+      } catch {
+        contactEmail = `contact@${channel_id}.com`;
+      }
+    }
+
+    // 2. Ensure video exists in yt_videos if video_id is provided, to satisfy foreign key
+    let effectiveVideoId = video_id || null;
+    if (effectiveVideoId) {
+      try {
+        await query(
+          `INSERT INTO yt_videos (video_id, channel_id, title, created_at, updated_at)
+           VALUES ($1, $2, $3, now(), now())
+           ON CONFLICT (video_id) DO UPDATE
+           SET title = COALESCE(EXCLUDED.title, yt_videos.title), updated_at = now()`,
+          [effectiveVideoId, channel_id, video_title || "Target Video"]
+        );
+      } catch (videoErr) {
+        console.warn("Could not upsert yt_videos row, setting video_id to null:", videoErr);
+        effectiveVideoId = null;
+      }
+    }
+
+    // 3. Insert into influencer_emails
+    const insertSql = `
+      INSERT INTO influencer_emails (
+        channel_id,
+        video_id,
+        email_address,
+        transcript,
+        outreach_commentary,
+        outreach_draft,
+        outreach_generated_at,
+        created_at,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, now(), now(), now())
+      RETURNING id
+    `;
+
+    const res = await query<{ id: number }>(insertSql, [
+      channel_id,
+      effectiveVideoId,
+      contactEmail,
+      transcript || null,
+      outreach_commentary || null,
+      outreach_draft.trim(),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      id: res[0]?.id,
+      message: "Draft saved to Review Hub successfully",
+    });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to save draft";
+    console.error("Failed to save email draft:", err);
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
+  }
+}
