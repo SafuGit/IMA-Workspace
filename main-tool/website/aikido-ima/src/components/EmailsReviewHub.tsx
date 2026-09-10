@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { InfluencerEmail } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import {
+  parseOutreachData,
+  formatOutreachDraft,
+  formatOutreachCommentary,
+  FormattedDraftOption,
+  FormattedHook,
+  FormattedSubjectLines,
+} from "@/lib/emailFormatter";
 import {
   Mail,
   Send,
@@ -17,6 +24,9 @@ import {
   Loader2,
   RefreshCw,
   Inbox,
+  ChevronDown,
+  ChevronUp,
+  FileText,
 } from "lucide-react";
 import { CreatorAvatar } from "./SafeImage";
 
@@ -30,11 +40,48 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
   const [loading, setLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState<InfluencerEmail | null>(null);
 
-  // Editable draft state
+  // Multi-draft, subject, and hooks state
+  const [draftsMap, setDraftsMap] = useState<Record<string, FormattedDraftOption>>({});
+  const [activeDraftKey, setActiveDraftKey] = useState<string>("option_a");
+  const [activeSubject, setActiveSubject] = useState<string>("");
   const [draftContent, setDraftContent] = useState("");
+  const [subjectLines, setSubjectLines] = useState<FormattedSubjectLines>({ primary: "", alternatives: [] });
+  const [hooks, setHooks] = useState<FormattedHook[]>([]);
+  const [showHooks, setShowHooks] = useState(true);
+
   const [copied, setCopied] = useState(false);
+  const [copiedSubject, setCopiedSubject] = useState(false);
   const [saving, setSaving] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const applySelectedEmail = (email: InfluencerEmail) => {
+    setSelectedEmail(email);
+    const parsed = email.parsed || parseOutreachData(email.outreach_draft, email.outreach_commentary);
+
+    const drafts =
+      parsed.drafts && Object.keys(parsed.drafts).length > 0
+        ? parsed.drafts
+        : {
+            option_a: {
+              key: "option_a",
+              label: "Default Draft",
+              subject: parsed.activeSubject || "",
+              body: email.outreach_draft || "",
+            },
+          };
+
+    setDraftsMap(drafts);
+    const initialKey = drafts[parsed.activeDraftKey]
+      ? parsed.activeDraftKey
+      : Object.keys(drafts)[0] || "option_a";
+    setActiveDraftKey(initialKey);
+
+    const activeDraft = drafts[initialKey];
+    setDraftContent(activeDraft?.body || parsed.activeBody || email.outreach_draft || "");
+    setActiveSubject(activeDraft?.subject || parsed.activeSubject || parsed.subjectLines?.primary || "");
+    setSubjectLines(parsed.subjectLines || { primary: "", alternatives: [] });
+    setHooks(parsed.hooks || []);
+  };
 
   const fetchEmails = useCallback(async () => {
     setLoading(true);
@@ -52,11 +99,13 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
         if (list.length > 0) {
           const matching = selectedEmail ? list.find((e) => e.id === selectedEmail.id) : null;
           const current = matching || list[0];
-          setSelectedEmail(current);
-          setDraftContent(current.outreach_draft || "");
+          applySelectedEmail(current);
         } else {
           setSelectedEmail(null);
           setDraftContent("");
+          setActiveSubject("");
+          setDraftsMap({});
+          setHooks([]);
         }
       }
     } catch (err) {
@@ -71,31 +120,117 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
   }, [fetchEmails]);
 
   const handleSelectEmail = (email: InfluencerEmail) => {
-    setSelectedEmail(email);
-    setDraftContent(email.outreach_draft || "");
+    applySelectedEmail(email);
+  };
+
+  const handleSwitchDraft = (newKey: string) => {
+    if (newKey === activeDraftKey) return;
+
+    // Save current active draft edits into draftsMap before switching
+    const updatedMap: Record<string, FormattedDraftOption> = {
+      ...draftsMap,
+      [activeDraftKey]: {
+        ...(draftsMap[activeDraftKey] || { key: activeDraftKey, label: activeDraftKey }),
+        body: draftContent,
+        subject: activeSubject,
+      },
+    };
+
+    setDraftsMap(updatedMap);
+    setActiveDraftKey(newKey);
+
+    const targetDraft = updatedMap[newKey];
+    if (targetDraft) {
+      setDraftContent(targetDraft.body || "");
+      if (targetDraft.subject) {
+        setActiveSubject(targetDraft.subject);
+      }
+    }
+  };
+
+  const handleSelectSubject = (subj: string) => {
+    setActiveSubject(subj);
+    setDraftsMap((prev) => ({
+      ...prev,
+      [activeDraftKey]: {
+        ...(prev[activeDraftKey] || { key: activeDraftKey, label: activeDraftKey, body: draftContent }),
+        subject: subj,
+      },
+    }));
   };
 
   const handleCopy = () => {
-    if (!draftContent) return;
-    navigator.clipboard.writeText(draftContent);
+    const fullText = activeSubject ? `Subject: ${activeSubject}\n\n${draftContent}` : draftContent;
+    if (!fullText) return;
+    navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopySubject = () => {
+    if (!activeSubject) return;
+    navigator.clipboard.writeText(activeSubject);
+    setCopiedSubject(true);
+    setTimeout(() => setCopiedSubject(false), 2000);
   };
 
   const handleSaveDraft = async () => {
     if (!selectedEmail) return;
     setSaving(true);
     try {
+      const currentDraftsMap = {
+        ...draftsMap,
+        [activeDraftKey]: {
+          ...(draftsMap[activeDraftKey] || { key: activeDraftKey, label: activeDraftKey }),
+          body: draftContent,
+          subject: activeSubject,
+        },
+      };
+
+      const formattedDraft = formatOutreachDraft(currentDraftsMap, activeDraftKey);
+      const formattedCommentary = formatOutreachCommentary(hooks, {
+        primary: activeSubject || subjectLines.primary,
+        alternatives: subjectLines.alternatives,
+      });
+
       const res = await fetch(`/api/emails/${selectedEmail.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save_draft", draft: draftContent }),
+        body: JSON.stringify({
+          action: "save_draft",
+          draft: formattedDraft,
+          commentary: formattedCommentary,
+        }),
       });
+
       if (res.ok) {
+        const updatedParsed = parseOutreachData(formattedDraft, formattedCommentary);
         setEmails((prev) =>
-          prev.map((e) => (e.id === selectedEmail.id ? { ...e, outreach_draft: draftContent } : e))
+          prev.map((e) =>
+            e.id === selectedEmail.id
+              ? {
+                  ...e,
+                  outreach_draft: formattedDraft,
+                  outreach_commentary: formattedCommentary,
+                  parsed: updatedParsed,
+                }
+              : e
+          )
         );
+        setSelectedEmail((prev) =>
+          prev && prev.id === selectedEmail.id
+            ? {
+                ...prev,
+                outreach_draft: formattedDraft,
+                outreach_commentary: formattedCommentary,
+                parsed: updatedParsed,
+              }
+            : prev
+        );
+        setDraftsMap(currentDraftsMap);
       }
+    } catch (err) {
+      console.error("Failed to save draft:", err);
     } finally {
       setSaving(false);
     }
@@ -105,10 +240,11 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
     if (!selectedEmail) return;
     setActionLoading(true);
     try {
+      const finalEmail = activeSubject ? `Subject: ${activeSubject}\n\n${draftContent}` : draftContent;
       const res = await fetch(`/api/emails/${selectedEmail.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "send" }),
+        body: JSON.stringify({ action: "send", final_email: finalEmail }),
       });
       if (res.ok) {
         // If in pending tab, remove from active list and advance to next
@@ -116,11 +252,13 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
           const remaining = emails.filter((e) => e.id !== selectedEmail.id);
           setEmails(remaining);
           if (remaining.length > 0) {
-            setSelectedEmail(remaining[0]);
-            setDraftContent(remaining[0].outreach_draft || "");
+            applySelectedEmail(remaining[0]);
           } else {
             setSelectedEmail(null);
             setDraftContent("");
+            setActiveSubject("");
+            setDraftsMap({});
+            setHooks([]);
           }
         } else {
           setEmails((prev) =>
@@ -147,11 +285,13 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
         setEmails(remaining);
         if (selectedEmail?.id === id) {
           if (remaining.length > 0) {
-            setSelectedEmail(remaining[0]);
-            setDraftContent(remaining[0].outreach_draft || "");
+            applySelectedEmail(remaining[0]);
           } else {
             setSelectedEmail(null);
             setDraftContent("");
+            setActiveSubject("");
+            setDraftsMap({});
+            setHooks([]);
           }
         }
       }
@@ -246,15 +386,22 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
                           <span className="text-xs font-bold text-white truncate">
                             {email.channel_name || "Creator"}
                           </span>
-                          {isSent ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                              Sent
-                            </span>
-                          ) : (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                              Ready
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {email.parsed?.drafts && Object.keys(email.parsed.drafts).length > 1 && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-medium">
+                                {Object.keys(email.parsed.drafts).length} Options
+                              </span>
+                            )}
+                            {isSent ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                                Sent
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                                Ready
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="text-[11px] text-slate-400 truncate mt-0.5">
                           {email.email_address}
@@ -342,16 +489,103 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
                 </div>
               </div>
 
-              {/* Personalization Context Box */}
-              {selectedEmail.outreach_commentary && (
-                <div className="p-4 bg-indigo-950/20 border-b border-slate-800 text-xs text-indigo-300 flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <div className="leading-relaxed">
-                    <span className="font-semibold text-indigo-200">AI Hook Strategy: </span>
-                    {selectedEmail.outreach_commentary}
+              {/* Draft Options Tabs */}
+              {draftsMap && Object.keys(draftsMap).length > 1 && (
+                <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-950/70 border-b border-slate-800 overflow-x-auto">
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                    Draft Options:
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {Object.entries(draftsMap).map(([key, draft]) => {
+                      const isCurrent = key === activeDraftKey;
+                      const label = draft.label || key.replace(/_/g, " ").toUpperCase();
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleSwitchDraft(key)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+                            isCurrent
+                              ? "bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-500/40"
+                              : "bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800"
+                          }`}
+                        >
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
+
+              {/* Subject Line Editor + Alternative Pills */}
+              <div className="px-5 py-3 border-b border-slate-800 bg-slate-950/40 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Subject Line
+                  </label>
+                  {activeSubject && (
+                    <button
+                      type="button"
+                      onClick={handleCopySubject}
+                      className="text-[11px] text-slate-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                    >
+                      {copiedSubject ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedSubject ? "Copied Subject" : "Copy Subject"}
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={activeSubject}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setActiveSubject(val);
+                    setDraftsMap((prev) => ({
+                      ...prev,
+                      [activeDraftKey]: {
+                        ...(prev[activeDraftKey] || { key: activeDraftKey, label: activeDraftKey, body: draftContent }),
+                        subject: val,
+                      },
+                    }));
+                  }}
+                  placeholder="Enter outreach subject line..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+
+                {/* Alternative Subject Pills */}
+                {subjectLines && (subjectLines.primary || (subjectLines.alternatives && subjectLines.alternatives.length > 0)) && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] uppercase font-semibold text-slate-500 tracking-wider mr-1">
+                      Alternatives:
+                    </span>
+                    {[
+                      ...(subjectLines.primary ? [subjectLines.primary] : []),
+                      ...(subjectLines.alternatives || []),
+                    ]
+                      .filter((subj, idx, self) => subj && self.indexOf(subj) === idx)
+                      .map((subj, idx) => {
+                        const isSelected = activeSubject === subj;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectSubject(subj)}
+                            className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all text-left truncate max-w-xs ${
+                              isSelected
+                                ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300 font-medium"
+                                : "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                            }`}
+                            title={subj}
+                          >
+                            {subj}
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
 
               {/* Video Reference */}
               {selectedEmail.video_title && (
@@ -373,24 +607,124 @@ export default function EmailsReviewHub({ initialChannelId }: EmailsReviewHubPro
                 </div>
               )}
 
+              {/* Video Hooks Strategy Accordion / Commentary */}
+              {hooks && hooks.length > 0 ? (
+                <div className="border-b border-slate-800 bg-slate-950/20">
+                  <button
+                    type="button"
+                    onClick={() => setShowHooks(!showHooks)}
+                    className="w-full px-5 py-2.5 flex items-center justify-between text-xs text-slate-300 hover:bg-slate-900/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                      <span className="font-semibold text-white">Extracted Video Hooks</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
+                        {hooks.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                      <span>{showHooks ? "Hide" : "Show"}</span>
+                      {showHooks ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </div>
+                  </button>
+
+                  {showHooks && (
+                    <div className="px-5 pb-3 pt-1 space-y-2 max-h-48 overflow-y-auto">
+                      {hooks.map((h, idx) => {
+                        const isCommentBacked = h.tag?.toLowerCase().includes("comment");
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 text-xs space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
+                                    isCommentBacked
+                                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                      : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                  }`}
+                                >
+                                  {isCommentBacked ? "💬 Comment-Backed" : "🎬 Transcript"}
+                                </span>
+                                {h.timestamp && (
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    ⏱ {h.timestamp}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const hookInsert = `Saw your take at ${h.timestamp || "recent video"}: "${h.text}"\n\n`;
+                                  setDraftContent((prev) => hookInsert + prev);
+                                }}
+                                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                              >
+                                + Prepend to Draft
+                              </button>
+                            </div>
+
+                            <div className="text-slate-200 font-serif italic text-[11px] bg-slate-950/40 p-2 rounded-lg border border-slate-800/60">
+                              &ldquo;{h.text}&rdquo;
+                            </div>
+
+                            {h.analysis && (
+                              <div className="text-[11px] text-slate-400 leading-relaxed">
+                                <span className="text-slate-500 font-medium">Angle: </span>
+                                {h.analysis}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : selectedEmail.outreach_commentary ? (
+                <div className="p-4 bg-indigo-950/20 border-b border-slate-800 text-xs text-indigo-300 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <span className="font-semibold text-indigo-200">AI Hook Strategy: </span>
+                    {selectedEmail.outreach_commentary}
+                  </div>
+                </div>
+              ) : null}
+
               {/* Editable Draft Editor */}
               <div className="flex-1 p-5 flex flex-col min-h-0 bg-slate-950/40">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Outreach Copy (Editable)
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      Outreach Body (Editable)
+                    </label>
+                    <span className="text-[11px] text-slate-500">
+                      {draftContent ? draftContent.split(/\s+/).filter(Boolean).length : 0} words
+                    </span>
+                  </div>
                   <button
                     onClick={handleSaveDraft}
                     disabled={saving}
-                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-xs text-indigo-400 border border-indigo-500/30 font-medium disabled:opacity-50 transition-colors"
                   >
-                    <Save className="w-3 h-3" />
+                    <Save className="w-3.5 h-3.5" />
                     {saving ? "Saving..." : "Save Draft"}
                   </button>
                 </div>
                 <textarea
                   value={draftContent}
-                  onChange={(e) => setDraftContent(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDraftContent(val);
+                    setDraftsMap((prev) => ({
+                      ...prev,
+                      [activeDraftKey]: {
+                        ...(prev[activeDraftKey] || { key: activeDraftKey, label: activeDraftKey, subject: activeSubject }),
+                        body: val,
+                      },
+                    }));
+                  }}
                   className="flex-1 w-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 resize-none"
                   placeholder="Generated outreach draft will appear here..."
                 />

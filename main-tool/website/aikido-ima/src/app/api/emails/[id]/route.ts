@@ -16,22 +16,35 @@ export async function PATCH(
     }
 
     if (action === "send") {
+      const { final_email } = body;
       await query(
         `UPDATE influencer_emails
-         SET outreach_sent_at = now(), updated_at = now()
-         WHERE id = $1`,
-        [emailId]
+         SET outreach_sent_at = now(),
+             outreach_email = COALESCE($1, outreach_email, outreach_draft),
+             updated_at = now()
+         WHERE id = $2`,
+        [final_email || null, emailId]
       );
       return NextResponse.json({ success: true, sent_at: new Date().toISOString() });
     }
 
     if (action === "save_draft") {
-      await query(
-        `UPDATE influencer_emails
-         SET outreach_draft = $1, updated_at = now()
-         WHERE id = $2`,
-        [draft || "", emailId]
-      );
+      const { commentary } = body;
+      if (commentary !== undefined) {
+        await query(
+          `UPDATE influencer_emails
+           SET outreach_draft = $1, outreach_commentary = $2, updated_at = now()
+           WHERE id = $3`,
+          [draft || "", commentary, emailId]
+        );
+      } else {
+        await query(
+          `UPDATE influencer_emails
+           SET outreach_draft = $1, updated_at = now()
+           WHERE id = $2`,
+          [draft || "", emailId]
+        );
+      }
       return NextResponse.json({ success: true });
     }
 

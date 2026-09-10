@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { InfluencerEmail } from "@/lib/types";
+import {
+  formatOutreachDraft,
+  formatOutreachCommentary,
+  parseOutreachData,
+} from "@/lib/emailFormatter";
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,7 +62,12 @@ export async function GET(req: NextRequest) {
       LIMIT 100
     `;
 
-    const emails = await query<InfluencerEmail>(sql, params);
+    const rawEmails = await query<InfluencerEmail>(sql, params);
+    const emails = rawEmails.map((e) => ({
+      ...e,
+      parsed: parseOutreachData(e.outreach_draft, e.outreach_commentary),
+    }));
+
     return NextResponse.json({ emails });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to fetch emails";
@@ -76,13 +86,29 @@ export async function POST(req: NextRequest) {
       outreach_commentary,
       transcript,
       email_address,
+      drafts,
+      subject_lines,
+      hooks,
+      active_draft_key,
     } = body;
 
     if (!channel_id) {
       return NextResponse.json({ error: "Missing required 'channel_id'" }, { status: 400 });
     }
 
-    if (!outreach_draft || typeof outreach_draft !== "string" || !outreach_draft.trim()) {
+    // Determine final outreach_draft (format multiple drafts if passed)
+    let finalDraft = outreach_draft;
+    if (drafts && typeof drafts === "object" && Object.keys(drafts).length > 0) {
+      finalDraft = formatOutreachDraft(drafts, active_draft_key || "option_a");
+    }
+
+    // Determine final outreach_commentary (format hooks & subject lines if passed)
+    let finalCommentary = outreach_commentary;
+    if ((hooks && Array.isArray(hooks)) || subject_lines) {
+      finalCommentary = formatOutreachCommentary(hooks || [], subject_lines);
+    }
+
+    if (!finalDraft || typeof finalDraft !== "string" || !finalDraft.trim()) {
       return NextResponse.json({ error: "Missing or empty 'outreach_draft'" }, { status: 400 });
     }
 
@@ -140,8 +166,8 @@ export async function POST(req: NextRequest) {
       effectiveVideoId,
       contactEmail,
       transcript || null,
-      outreach_commentary || null,
-      outreach_draft.trim(),
+      finalCommentary || null,
+      finalDraft.trim(),
     ]);
 
     return NextResponse.json({

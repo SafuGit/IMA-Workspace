@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { YtChannel, GeneratedEmailResponse, GeneratedHook, GeneratedDraft } from "@/lib/types";
 import { formatCompactNumber, formatPercent } from "@/lib/utils";
+import { formatOutreachDraft, formatOutreachCommentary } from "@/lib/emailFormatter";
 import { CreatorAvatar, VideoThumbnail } from "./SafeImage";
 import Link from "next/link";
 import {
@@ -213,12 +214,48 @@ export default function GenerateEmailView({
     setSavedSuccess(false);
 
     try {
-      // Find active draft
-      const activeDraft = response.drafts[selectedDraftKey];
-      const subject = activeDraft?.subject || response.subject_lines?.primary || "";
-      const hooksSummary = response.hooks
-        ?.map((h, i) => `[Hook ${i + 1} (${h.tag})]: ${h.text} (${h.timestamp})`)
-        .join("\n\n");
+      // Build all drafts dictionary, incorporating current user edits into the selected draft
+      const allDrafts: Record<string, { label?: string; subject?: string; body: string }> = {};
+
+      const draftKeys = Object.keys(response.drafts || {});
+      if (draftKeys.length === 0) {
+        allDrafts[selectedDraftKey] = {
+          label: "Selected Draft",
+          subject: response.subject_lines?.primary || "",
+          body: editedBody,
+        };
+      } else {
+        for (const k of draftKeys) {
+          const d = response.drafts[k];
+          if (d) {
+            allDrafts[k] = {
+              label: d.name || k,
+              subject:
+                d.subject ||
+                (k === "option_a"
+                  ? response.subject_lines?.primary
+                  : k === "option_b"
+                  ? response.subject_lines?.alternative_1
+                  : response.subject_lines?.alternative_2) ||
+                "",
+              body: k === selectedDraftKey ? editedBody : d.body,
+            };
+          }
+        }
+      }
+
+      // Ensure active draft is populated with latest user edits
+      if (!allDrafts[selectedDraftKey]) {
+        allDrafts[selectedDraftKey] = {
+          label: selectedDraftKey,
+          subject: response.subject_lines?.primary || "",
+          body: editedBody,
+        };
+      }
+
+      // Format drafts and commentary using next.js formatter
+      const formattedDraft = formatOutreachDraft(allDrafts, selectedDraftKey);
+      const formattedCommentary = formatOutreachCommentary(response.hooks || [], response.subject_lines);
 
       const res = await fetch("/api/emails", {
         method: "POST",
@@ -227,8 +264,12 @@ export default function GenerateEmailView({
           channel_id: channel?.channel_id || response.channel_id,
           video_id: response.video_id,
           video_title: response.title,
-          outreach_draft: editedBody,
-          outreach_commentary: hooksSummary,
+          outreach_draft: formattedDraft,
+          outreach_commentary: formattedCommentary,
+          drafts: allDrafts,
+          subject_lines: response.subject_lines,
+          hooks: response.hooks,
+          active_draft_key: selectedDraftKey,
           status: "pending",
         }),
       });

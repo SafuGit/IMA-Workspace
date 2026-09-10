@@ -102,6 +102,7 @@ export interface InfluencerEmail {
   followup_sent_at: string | null;
   created_at: string;
   updated_at: string;
+  parsed?: import("./emailFormatter").ParsedOutreachData;
 }
 
 export interface DashboardStats {
