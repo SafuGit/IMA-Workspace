@@ -175,3 +175,41 @@ export interface GeneratedEmailResponse {
   error?: string;
 }
 
+export interface PipelineOverviewStats {
+  totalChannels: number;
+  fetchedChannels: number;
+  qualifiedChannels: number;
+  needReviewChannels: number;
+  needReviewQualified: number;
+  approvedChannels: number;
+  rejectedChannels: number;
+  totalVideos: number;
+  totalKeywords: number;
+  usedKeywords: number;
+  unusedKeywords: number;
+  keywordCycleProgressPct: number;
+  channelsSize: string;
+  videosSize: string;
+  dbSize: string;
+  draftedEmails: number;
+  sentEmails: number;
+}
+
+export interface StatisticsData {
+  overview: PipelineOverviewStats;
+  funnel: {
+    total: number;
+    fetched: number;
+    qualified: number;
+    needReview: number;
+    approved: number;
+    rejected: number;
+    drafted: number;
+    sent: number;
+  };
+  reasons: { reason: string; count: number }[];
+  subscriberBuckets: { bucket: string; count: number }[];
+  topKeywords: { keyword: string; total: number; approved: number }[];
+}
+
+
