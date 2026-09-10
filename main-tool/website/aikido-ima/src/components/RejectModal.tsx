@@ -15,6 +15,7 @@ const REJECTION_OPTIONS: { reason: RejectionReason; label: string; desc: string 
   { reason: "followers", label: "Out of Follower Range", desc: "Less than 25k or greater than 1M subscribers" },
   { reason: "avg views", label: "Low Average Views", desc: "Low viewership relative to subscriber count" },
   { reason: "bad engagement rate", label: "Poor Engagement", desc: "Low like/comment ratio, inactive audience" },
+  { reason: "woman", label: "Woman", desc: "Creator does not fit outreach criteria" },
   { reason: "bad content", label: "Low Quality Content", desc: "Automated slop, re-uploads, or poor video style" },
   { reason: "unrelated", label: "Unrelated Niche", desc: "Not in IT, coding, SaaS, or tech hardware space" },
   { reason: "other", label: "Other / Unfit", desc: "General mismatch for Fylint brand sponsorship" },

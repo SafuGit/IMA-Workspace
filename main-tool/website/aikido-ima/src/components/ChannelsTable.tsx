@@ -662,6 +662,7 @@ export default function ChannelsTable({
                   <option value="followers">Followers Out of Range</option>
                   <option value="avg views">Low Average Views</option>
                   <option value="bad engagement rate">Poor Engagement Rate</option>
+                  <option value="woman">Woman</option>
                   <option value="bad content">Low Quality Content</option>
                   <option value="unrelated">Unrelated Niche</option>
                   <option value="other">Other / Unfit</option>
