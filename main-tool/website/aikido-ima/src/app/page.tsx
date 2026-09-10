@@ -23,6 +23,7 @@ export default async function OverviewPage() {
 
   // Fetch pipeline aggregates
   let totalChannels = 0;
+  let qualified = 0;
   let unreviewed = 0;
   let approved = 0;
   let rejected = 0;
@@ -36,12 +37,20 @@ export default async function OverviewPage() {
     const [chStats, kwStats, emailStats] = await Promise.all([
       query<{
         total: string;
+        qualified: string;
         unreviewed: string;
         approved: string;
         rejected: string;
       }>(`
         SELECT
           COUNT(*)::text AS total,
+          COUNT(*) FILTER (
+            WHERE valid IS NULL
+              AND subscriber_count > 25000
+              AND subscriber_count < 1000000
+              AND avg_views > 25000
+              AND (avg_engagement_rate > 1 OR (avg_engagement_rate <= 1 AND avg_engagement_rate > 0.01))
+          )::text AS qualified,
           COUNT(*) FILTER (WHERE valid IS NULL)::text AS unreviewed,
           COUNT(*) FILTER (WHERE valid = TRUE)::text AS approved,
           COUNT(*) FILTER (WHERE valid = FALSE)::text AS rejected
@@ -62,6 +71,7 @@ export default async function OverviewPage() {
     ]);
 
     totalChannels = Number(chStats[0]?.total || 0);
+    qualified = Number(chStats[0]?.qualified || 0);
     unreviewed = Number(chStats[0]?.unreviewed || 0);
     approved = Number(chStats[0]?.approved || 0);
     rejected = Number(chStats[0]?.rejected || 0);
@@ -94,18 +104,25 @@ export default async function OverviewPage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/channels?tab=qualified"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Review Qualified ({qualified.toLocaleString()})
+            </Link>
+            <Link
               href="/channels?tab=unreviewed"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all"
             >
               <Users className="w-3.5 h-3.5" />
-              Review Candidates ({unreviewed})
+              Need Review ({unreviewed.toLocaleString()})
             </Link>
             <Link
               href="/emails"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
             >
               <Mail className="w-3.5 h-3.5" />
-              Morning Email Hub
+              Email Hub
             </Link>
           </div>
         </div>
@@ -117,8 +134,28 @@ export default async function OverviewPage() {
         )}
 
         {/* Primary Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Unreviewed */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Card 1: Qualified Creators */}
+          <Link
+            href="/channels?tab=qualified"
+            className="group p-5 rounded-2xl bg-gradient-to-br from-amber-950/20 via-slate-900 to-slate-900 border border-amber-500/30 hover:border-amber-500/60 transition-all shadow-lg hover:shadow-amber-500/10"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-300">Qualified Creators</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-white mt-3">{qualified.toLocaleString()}</div>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-500/20 text-[11px] text-amber-400/80">
+              <span>&ldquo;The Perfect Ones&rdquo;</span>
+              <span className="text-amber-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 font-semibold">
+                Review <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 2: Unreviewed */}
           <Link
             href="/channels?tab=unreviewed"
             className="group p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/40 transition-all shadow-lg hover:shadow-indigo-500/5"

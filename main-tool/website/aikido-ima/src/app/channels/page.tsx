@@ -6,7 +6,7 @@ import ChannelsTable from "@/components/ChannelsTable";
 export const dynamic = "force-dynamic";
 
 interface ChannelsPageProps {
-  searchParams: Promise<{ tab?: string; search?: string }>;
+  searchParams: Promise<{ tab?: string; search?: string; scope?: string }>;
 }
 
 export default async function ChannelsPage({ searchParams }: ChannelsPageProps) {
@@ -15,21 +15,22 @@ export default async function ChannelsPage({ searchParams }: ChannelsPageProps) 
     redirect("/login");
   }
 
-  const { tab, search } = await searchParams;
+  const { tab, search, scope } = await searchParams;
 
   return (
     <DashboardShell>
       <div className="p-6 sm:p-8 max-w-[1600px] mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Creators Triage</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Creators Triage & Qualification</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Qualify incoming YouTube creators, approve high-fit candidates, and reject poor matches into the bin.
+            Review top-tier qualified creators (&ldquo;The Perfect Ones&rdquo;), triage incoming YouTube channels, and manage approvals.
           </p>
         </div>
 
         <ChannelsTable
-          initialTab={tab || "unreviewed"}
+          initialTab={tab || "qualified"}
           initialSearch={search || ""}
+          initialScope={scope || "unreviewed"}
         />
       </div>
     </DashboardShell>

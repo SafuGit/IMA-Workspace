@@ -23,21 +23,40 @@ import {
   RotateCcw,
   AlertCircle,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CreatorAvatar, VideoThumbnail } from "./SafeImage";
 
+function isChannelQualified(c: YtChannel): boolean {
+  const subs = Number(c.subscriber_count || 0);
+  const views = Number(c.avg_views || 0);
+  const eng = Number(c.avg_engagement_rate || 0);
+  return subs > 25000 && subs < 1000000 && views > 25000 && (eng > 1 || (eng <= 1 && eng > 0.01));
+}
+
 interface ChannelsTableProps {
   initialTab?: string;
   initialSearch?: string;
+  initialScope?: string;
 }
 
 export default function ChannelsTable({
-  initialTab = "unreviewed",
+  initialTab = "qualified",
   initialSearch = "",
+  initialScope = "unreviewed",
 }: ChannelsTableProps) {
   const [tab, setTab] = useState(initialTab);
+  const [qualifiedScope, setQualifiedScope] = useState(initialScope);
+  const [unreviewedFilter, setUnreviewedFilter] = useState("all");
+  const [tabCounts, setTabCounts] = useState<{
+    qualified: number;
+    unreviewed: number;
+    approved: number;
+    rejected: number;
+    all: number;
+  } | null>(null);
   const [search, setSearch] = useState(initialSearch);
   const [channels, setChannels] = useState<YtChannel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,6 +150,13 @@ export default function ChannelsTable({
         limit: "25",
       });
 
+      if (tab === "qualified") {
+        params.set("scope", qualifiedScope);
+      }
+      if (tab === "unreviewed" && unreviewedFilter !== "all") {
+        params.set("unreviewedFilter", unreviewedFilter);
+      }
+
       if (minSubs > 0) params.set("minSubs", minSubs.toString());
       if (maxSubs > 0) params.set("maxSubs", maxSubs.toString());
       if (minViews) params.set("minViews", minViews);
@@ -143,13 +169,28 @@ export default function ChannelsTable({
         setChannels(data.channels || []);
         setTotalPages(data.pagination?.totalPages || 1);
         setTotalCount(data.pagination?.total || 0);
+        if (data.tabCounts) {
+          setTabCounts(data.tabCounts);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch channels:", err);
     } finally {
       setLoading(false);
     }
-  }, [tab, search, sortBy, sortOrder, subTier, minViews, minEngagement, rejectionReason, page]);
+  }, [
+    tab,
+    search,
+    sortBy,
+    sortOrder,
+    subTier,
+    minViews,
+    minEngagement,
+    rejectionReason,
+    page,
+    qualifiedScope,
+    unreviewedFilter,
+  ]);
 
   useEffect(() => {
     fetchChannels();
@@ -192,6 +233,9 @@ export default function ChannelsTable({
 
   const handleApprove = async (channelId: string) => {
     setActionLoadingId(channelId);
+    const target = channels.find((c) => c.channel_id === channelId);
+    const wasQualified = target ? isChannelQualified(target) : false;
+
     try {
       const res = await fetch(`/api/channels/${channelId}`, {
         method: "PATCH",
@@ -201,7 +245,11 @@ export default function ChannelsTable({
 
       if (res.ok) {
         // Optimistically update list
-        if (tab === "unreviewed" || tab === "rejected") {
+        if (
+          tab === "unreviewed" ||
+          tab === "rejected" ||
+          (tab === "qualified" && qualifiedScope === "unreviewed")
+        ) {
           setChannels((prev) => prev.filter((c) => c.channel_id !== channelId));
           setTotalCount((prev) => Math.max(0, prev - 1));
         } else {
@@ -211,6 +259,17 @@ export default function ChannelsTable({
             )
           );
         }
+
+        setTabCounts((prev) =>
+          prev
+            ? {
+                ...prev,
+                qualified: wasQualified ? Math.max(0, prev.qualified - 1) : prev.qualified,
+                unreviewed: Math.max(0, prev.unreviewed - 1),
+                approved: prev.approved + 1,
+              }
+            : null
+        );
       }
     } finally {
       setActionLoadingId(null);
@@ -219,6 +278,9 @@ export default function ChannelsTable({
 
   const handleRejectConfirm = async (channelId: string, reason: RejectionReason) => {
     setActionLoadingId(channelId);
+    const target = channels.find((c) => c.channel_id === channelId);
+    const wasQualified = target ? isChannelQualified(target) : false;
+
     try {
       const res = await fetch(`/api/channels/${channelId}`, {
         method: "PATCH",
@@ -228,7 +290,11 @@ export default function ChannelsTable({
 
       if (res.ok) {
         // Optimistically update list
-        if (tab === "unreviewed" || tab === "approved") {
+        if (
+          tab === "unreviewed" ||
+          tab === "approved" ||
+          (tab === "qualified" && qualifiedScope === "unreviewed")
+        ) {
           setChannels((prev) => prev.filter((c) => c.channel_id !== channelId));
           setTotalCount((prev) => Math.max(0, prev - 1));
         } else {
@@ -238,6 +304,17 @@ export default function ChannelsTable({
             )
           );
         }
+
+        setTabCounts((prev) =>
+          prev
+            ? {
+                ...prev,
+                qualified: wasQualified ? Math.max(0, prev.qualified - 1) : prev.qualified,
+                unreviewed: Math.max(0, prev.unreviewed - 1),
+                rejected: prev.rejected + 1,
+              }
+            : null
+        );
       }
     } finally {
       setActionLoadingId(null);
@@ -249,12 +326,43 @@ export default function ChannelsTable({
       {/* Top Filter & Search Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* Tab Buttons */}
-        <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
+        <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto max-w-full">
           {[
-            { id: "unreviewed", label: "Unreviewed Queue", icon: HelpCircle },
-            { id: "approved", label: "Approved Candidates", icon: CheckCircle2 },
-            { id: "rejected", label: "Rejected (Bin)", icon: XCircle },
-            { id: "all", label: "All Channels", icon: null },
+            {
+              id: "qualified",
+              label: "Qualified Creators",
+              icon: Sparkles,
+              count: tabCounts?.qualified,
+              highlight: true,
+            },
+            {
+              id: "unreviewed",
+              label: "Need Review",
+              icon: HelpCircle,
+              count: tabCounts?.unreviewed,
+              highlight: false,
+            },
+            {
+              id: "approved",
+              label: "Approved Candidates",
+              icon: CheckCircle2,
+              count: tabCounts?.approved,
+              highlight: false,
+            },
+            {
+              id: "rejected",
+              label: "Rejected (Bin)",
+              icon: XCircle,
+              count: tabCounts?.rejected,
+              highlight: false,
+            },
+            {
+              id: "all",
+              label: "All Channels",
+              icon: null,
+              count: tabCounts?.all,
+              highlight: false,
+            },
           ].map((t) => {
             const isActive = tab === t.id;
             const Icon = t.icon;
@@ -265,14 +373,39 @@ export default function ChannelsTable({
                   setTab(t.id);
                   setPage(1);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? "bg-indigo-600 text-white shadow-sm"
+                    ? t.highlight
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold shadow-sm shadow-amber-500/20"
+                      : "bg-indigo-600 text-white shadow-sm"
+                    : t.highlight
+                    ? "text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 border border-amber-500/20"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
                 }`}
               >
-                {Icon && <Icon className="w-3.5 h-3.5" />}
-                {t.label}
+                {Icon && (
+                  <Icon
+                    className={`w-3.5 h-3.5 ${
+                      isActive && t.highlight ? "text-slate-950" : t.highlight ? "text-amber-400" : ""
+                    }`}
+                  />
+                )}
+                <span>{t.label}</span>
+                {t.count !== undefined && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
+                      isActive
+                        ? t.highlight
+                          ? "bg-slate-950/20 text-slate-950"
+                          : "bg-white/20 text-white"
+                        : t.highlight
+                        ? "bg-amber-500/20 text-amber-300"
+                        : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {t.count.toLocaleString()}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -312,6 +445,123 @@ export default function ChannelsTable({
           </button>
         </div>
       </div>
+
+      {/* Category Sub-Header Banner for Qualified Creators */}
+      {tab === "qualified" && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 text-xs shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <Sparkles className="w-4 h-4" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-amber-200">
+                  Qualified Creators (&ldquo;The Perfect Ones&rdquo;)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                  Strict High-Yield Criteria
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                25K – 1M Subscribers • &gt;25K Average Views • &gt;1.0% Engagement Rate
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 self-start sm:self-auto">
+            <button
+              onClick={() => {
+                setQualifiedScope("unreviewed");
+                setPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                qualifiedScope === "unreviewed"
+                  ? "bg-amber-500 text-slate-950 shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Awaiting Review ({tabCounts?.qualified ?? 0})
+            </button>
+            <button
+              onClick={() => {
+                setQualifiedScope("approved");
+                setPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                qualifiedScope === "approved"
+                  ? "bg-amber-500 text-slate-950 shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Approved Qualified
+            </button>
+            <button
+              onClick={() => {
+                setQualifiedScope("all");
+                setPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                qualifiedScope === "all"
+                  ? "bg-amber-500 text-slate-950 shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              All Qualified
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Category Sub-Header Banner for Need Review (Triage Queue) */}
+      {tab === "unreviewed" && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+              <HelpCircle className="w-4 h-4" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white">Need Review (Triage Queue)</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-medium">
+                  valid IS NULL
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                All unvetted channels awaiting triage decisions (approval or rejection).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800 self-start sm:self-auto">
+            <button
+              onClick={() => {
+                setUnreviewedFilter("all");
+                setPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                unreviewedFilter === "all"
+                  ? "bg-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              All Pending ({tabCounts?.unreviewed ?? 0})
+            </button>
+            <button
+              onClick={() => {
+                setUnreviewedFilter("non-qualified");
+                setPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                unreviewedFilter === "non-qualified"
+                  ? "bg-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Standard / Non-Qualified
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Advanced Filter Toolbar */}
       {showFilters && (
@@ -576,6 +826,7 @@ export default function ChannelsTable({
               ) : (
                 channels.map((channel) => {
                   const isLoading = actionLoadingId === channel.channel_id;
+                  const isQualified = isChannelQualified(channel);
 
                   return (
                     <tr
@@ -594,6 +845,15 @@ export default function ChannelsTable({
                           <div className="min-w-0 max-w-[200px]">
                             <div className="font-semibold text-white truncate text-xs flex items-center gap-1.5">
                               <span className="truncate">{channel.channel_name}</span>
+                              {isQualified && (
+                                <span
+                                  title="Qualified Creator ('The Perfect Ones'): 25K–1M subs, >25K avg views, >1.0% engagement"
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold shrink-0"
+                                >
+                                  <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                                  Perfect
+                                </span>
+                              )}
                               <a
                                 href={`https://www.youtube.com/channel/${channel.channel_id}`}
                                 target="_blank"

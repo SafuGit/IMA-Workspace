@@ -23,8 +23,27 @@ export async function GET(req: NextRequest) {
     let pIdx = 1;
 
     // Tab condition
-    if (tab === "unreviewed") {
+    if (tab === "qualified") {
+      // Qualified Creators category: 25K-1M subs, >25K avg views, >1% engagement
+      conditions.push("c.subscriber_count > 25000 AND c.subscriber_count < 1000000");
+      conditions.push("c.avg_views > 25000");
+      conditions.push("(c.avg_engagement_rate > 1 OR (c.avg_engagement_rate <= 1 AND c.avg_engagement_rate > 0.01))");
+
+      const scope = searchParams.get("scope") || "unreviewed";
+      if (scope === "unreviewed") {
+        conditions.push("c.valid IS NULL");
+      } else if (scope === "approved") {
+        conditions.push("c.valid = TRUE");
+      } else if (scope === "rejected") {
+        conditions.push("c.valid = FALSE");
+      }
+      // If scope === "all", do not filter on valid
+    } else if (tab === "unreviewed") {
       conditions.push("c.valid IS NULL");
+      const unreviewedFilter = searchParams.get("unreviewedFilter");
+      if (unreviewedFilter === "non-qualified") {
+        conditions.push("NOT (c.subscriber_count > 25000 AND c.subscriber_count < 1000000 AND c.avg_views > 25000 AND (c.avg_engagement_rate > 1 OR (c.avg_engagement_rate <= 1 AND c.avg_engagement_rate > 0.01)))");
+      }
     } else if (tab === "approved") {
       conditions.push("c.valid = TRUE");
     } else if (tab === "rejected") {
@@ -133,7 +152,32 @@ export async function GET(req: NextRequest) {
     `;
 
     params.push(limit, offset);
-    const channels = await query<YtChannel>(dataSql, params);
+    const [channels, countsRes] = await Promise.all([
+      query<YtChannel>(dataSql, params),
+      query<{
+        qualified: number;
+        unreviewed: number;
+        approved: number;
+        rejected: number;
+        all: number;
+      }>(`
+        SELECT
+          COUNT(*) FILTER (
+            WHERE valid IS NULL
+              AND subscriber_count > 25000
+              AND subscriber_count < 1000000
+              AND avg_views > 25000
+              AND (avg_engagement_rate > 1 OR (avg_engagement_rate <= 1 AND avg_engagement_rate > 0.01))
+          )::int AS qualified,
+          COUNT(*) FILTER (WHERE valid IS NULL)::int AS unreviewed,
+          COUNT(*) FILTER (WHERE valid = TRUE)::int AS approved,
+          COUNT(*) FILTER (WHERE valid = FALSE)::int AS rejected,
+          COUNT(*)::int AS all
+        FROM yt_channels
+      `),
+    ]);
+
+    const tabCounts = countsRes[0] || { qualified: 0, unreviewed: 0, approved: 0, rejected: 0, all: 0 };
 
     return NextResponse.json({
       channels,
@@ -143,6 +187,7 @@ export async function GET(req: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      tabCounts,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to fetch channels";

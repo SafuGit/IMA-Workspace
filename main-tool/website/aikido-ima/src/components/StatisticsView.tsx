@@ -177,7 +177,7 @@ export default function StatisticsView() {
               <strong className="text-amber-200 font-semibold">{overview.needReviewQualified.toLocaleString()}</strong> in review queue
             </span>
             <Link
-              href="/channels?tab=unreviewed"
+              href="/channels?tab=qualified"
               className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400 hover:text-amber-300 transition-colors"
             >
               Review Qualified →
