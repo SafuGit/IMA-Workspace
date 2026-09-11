@@ -6,6 +6,7 @@ import {
   formatOutreachCommentary,
   parseOutreachData,
   computeFollowupStatus,
+  generateFollowupDraft,
 } from "@/lib/emailFormatter";
 
 export async function GET(req: NextRequest) {
@@ -81,21 +82,50 @@ export async function GET(req: NextRequest) {
       rawEmails = await query<InfluencerEmail>(fallbackSql, params);
     }
 
+    const updates: Promise<unknown>[] = [];
+
     let emails = rawEmails.map((e) => {
       const parsed = parseOutreachData(e.outreach_draft, e.outreach_commentary);
+      let followup_draft = e.followup_draft;
+
       const followup_status = computeFollowupStatus(
         e.outreach_sent_at,
         e.creator_responded_at,
         e.followup_sent_at,
-        e.followup_draft,
+        followup_draft,
         e.followup_commentary
       );
+
+      // On-demand API auto-generation: If milestone reached, not responded, and draft missing:
+      if (e.outreach_sent_at && followup_status.isDue && !followup_status.isResponded && !followup_draft) {
+        const gen = generateFollowupDraft(
+          followup_status.stage,
+          e.channel_name,
+          e.video_title,
+          parsed.activeSubject
+        );
+        followup_draft = `Subject: ${gen.subject}\n\nBody:\n${gen.body}`;
+        updates.push(
+          query(
+            `UPDATE influencer_emails
+             SET followup_draft = $1, followup_generated_at = now(), updated_at = now()
+             WHERE id = $2`,
+            [followup_draft, e.id]
+          ).catch((err) => console.error("Auto followup draft save failed:", err))
+        );
+      }
+
       return {
         ...e,
+        followup_draft,
         parsed,
         followup_status,
       };
     });
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+    }
 
     if (status === "followup") {
       emails = emails.filter((e) => !e.followup_status?.isResponded);

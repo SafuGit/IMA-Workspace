@@ -478,12 +478,12 @@ export function computeFollowupStatus(
  */
 export function generateFollowupDraft(
   stage: number,
-  creatorName: string = "there",
-  videoTitle: string = "your recent tutorial",
-  originalSubject: string = ""
+  creatorName?: string | null,
+  videoTitle?: string | null,
+  originalSubject?: string | null
 ): { subject: string; body: string } {
-  const cleanName = creatorName.replace(/^@/, "").trim() || "there";
-  const cleanVideo = videoTitle.trim() || "your recent tutorial";
+  const cleanName = (creatorName || "there").replace(/^@/, "").trim() || "there";
+  const cleanVideo = (videoTitle || "your recent tutorial").trim() || "your recent tutorial";
   const subject = originalSubject
     ? originalSubject.toLowerCase().startsWith("re:")
       ? originalSubject

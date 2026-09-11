@@ -60,6 +60,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(payload).encode("utf-8"))
             return
 
+        if self.path in ("/api/followups/check", "/followups/check"):
+            try:
+                from email_generation.followup_cron import check_and_generate_followups
+                results = check_and_generate_followups()
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "results": results}).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         # Default info page
         payload = {
             "service": "Fylint Email Generation API",
@@ -91,6 +102,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Generate email for a target video."""
+        if self.path in ("/api/followups/check", "/followups/check"):
+            try:
+                from email_generation.followup_cron import check_and_generate_followups
+                results = check_and_generate_followups()
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "results": results}).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         if self.path not in ("/api/generate-email", "/generate-email"):
             self._set_headers(404)
             self.wfile.write(json.dumps({"error": f"Endpoint not found: {self.path}"}).encode("utf-8"))
