@@ -115,7 +115,23 @@ def build_agy_prompt(video_data: dict[str, Any]) -> str:
 You are an expert influencer marketer writing outreach emails on behalf of Safwan at Fylint (fylint.com).
 Your task is two-fold:
 1. Find high-converting personalization hooks from the video details below.
-2. Draft a personalized cold outreach email to the creator offering brand sponsorship representation.
+2. Draft 3 personalized cold outreach emails to the creator offering sponsorship brokerage / agency representation.
+
+CRITICAL BROKER / AGENCY FRAMING (NON-NEGOTIABLE):
+- Fylint is a sponsorship brokerage / agency representing tech and software creators.
+- You are reaching out to the creator as a BROKER / AGENCY seeking to represent their channel and secure sponsorships for them from relevant tech brands.
+- DO NOT pitch as if you already have a specific company, sponsor, or brand deal in mind.
+- STRICTLY BANNED PHRASES:
+  * "I have a company in mind" / "I have a few company ideas for your upcoming videos"
+  * "I have an AI tool / software that wants to sponsor this"
+  * "A brand asked me to reach out to you"
+  * "We want to sponsor your next video with..."
+  * Any phrasing implying a pre-existing, pre-selected sponsor is already waiting.
+- WHY: If you write as if you have a specific company in mind, creators will immediately ask "What company is it?" and "What's the budget?". Pitching as if you have a sponsor in hand when no deal is signed is misleading.
+- HOW TO PHRASE THE BROKER / AGENCY OFFER:
+  * State clearly and conversationally that Fylint is a sponsorship brokerage / agency representing tech creators.
+  * Frame the value around representation: actively pitching their channel out to relevant software companies in their space, securing high flat integration rates, and handling the contract/admin work on their behalf with zero upfront fees (earning only when deals close).
+  * Keep Paragraph 2 to one natural, peer-level sentence (~15–20 words).
 
 TARGET VIDEO DETAILS:
 - Title: {title}
@@ -131,7 +147,7 @@ INSTRUCTIONS:
 
 ### Step 1: Find Personalization Hooks
 - Read the timestamped transcript and top comments. Look for a specific, memorable moment that bridges to the creator's value (e.g. how clearly they explain difficult concepts, an opinion their audience strongly agreed with, a unique workflow or aesthetic, a relatable perspective).
-- CRITICAL: Reject throwaway jokes or isolated trivia (like cookie preferences or random tangents) that cannot logically connect to why sponsors want them.
+- CRITICAL: Reject throwaway jokes or isolated trivia that cannot logically connect to why sponsors want them.
 - Apply the 'a person would know' filter: avoid dry changelog summaries or deep-cut technical jargon. Pick something a real viewer watching once would actually remember.
 - Cross-check against top comments:
   - If a top comment reacted to the same moment, tag it [comment-backed].
@@ -169,43 +185,41 @@ INSTRUCTIONS:
   - "so you don't have to waste time"
   - "Worth a quick chat?" / "Worth exploring for your next video?" / "Curious to see what that looks like?"
 
-- STRICT HONESTY — ZERO FABRICATED SPONSORS:
-  NEVER claim to have active brand clients, signed budgets, or specific companies waiting (e.g. BANNED: "I have a couple AI tools looking for integrations", "A brand asked me to reach out to you"). Safwan represents creators to pitch their channels to B2B brands and negotiate deals; he does NOT have pre-signed contracts in hand.
+- DRAFTS VARIETY REQUIREMENT (3 Distinct Broker/Agency Angles):
+  Generate THREE (3) completely distinct outreach email drafts (Draft A, Draft B, Draft C). Each draft must pair with a different hook from Step 1, phrase the broker/agency representation from a distinct angle, use fresh phrasing and vocabulary, and end with a uniquely tailored CTA:
 
-- DRAFTS VARIETY REQUIREMENT:
-  Generate THREE (3) completely distinct outreach email drafts (Draft A, Draft B, Draft C). Each draft must pair with a different hook from Step 1, take a completely different angle on the partnership, use fresh phrasing and vocabulary, and end with a uniquely tailored CTA:
+  * **Draft A: Agency Representation & Deal Sourcing** (pairs with Hook 1)
+    - Hook: Bridge from Hook 1 directly into why software brands look for creators with this level of clarity/trust.
+    - Offer: 1 casual sentence stating that Safwan runs Fylint, a sponsorship brokerage representing tech creators — taking their channel directly to relevant software companies and negotiating deals on their behalf.
+    - CTA: Tailored question asking if they're open to working with an agency/brokerage to bring in sponsorships for their channel (answerable in 1 word).
 
-  * **Draft A: Viewer Trust & Monetization Angle** (pairs with Hook 1)
-    - Hook: Bridge from Hook 1 directly to the creator's audience trust.
-    - Offer: 1 casual sentence framing how high tutorial retention / instructional clarity positions the channel to command premium flat sponsorship rates rather than standard affiliate cuts.
-    - CTA: Tailored question asking about their sponsorship pricing benchmarks or rate structure (answerable in 1 word).
+  * **Draft B: Rate Negotiation & Placement** (pairs with Hook 2)
+    - Hook: Bridge from Hook 2 into the channel's high audience trust and commercial positioning.
+    - Offer: 1 casual sentence explaining that as a brokerage, Fylint pitches tech creators to software brands for premium flat rates rather than weak affiliate cuts, handling negotiations so they don't have to deal with lowball offers.
+    - CTA: Tailored question asking if they're curious to see where an agency would benchmark their channel's integration rates in the current market.
 
-  * **Draft B: Software Category Fit Angle** (pairs with Hook 2)
-    - Hook: Bridge from Hook 2 into the specific software category relevant to this tutorial (e.g. dev tooling, workflow automation, AI apps).
-    - Offer: 1 casual sentence explaining that Safwan pitches tech channels directly to software companies in that exact space to secure integration spots.
-    - CTA: Tailored question asking if they'd be open to seeing a couple company ideas that fit their upcoming videos.
-
-  * **Draft C: Production Pipeline & Calendar Angle** (pairs with Hook 3)
-    - Hook: Bridge from Hook 3 into the creator's upcoming production flow.
-    - Offer: 1 casual sentence offering to represent their channel and pitch upcoming video topics to relevant brands ahead of time.
-    - CTA: Tailored question asking if they have any open integration slots in their upcoming recording schedule.
+  * **Draft C: Production Calendar & Roster Placement** (pairs with Hook 3)
+    - Hook: Bridge from Hook 3 into the creator's upcoming production flow or recording schedule.
+    - Offer: 1 casual sentence offering to represent their channel and proactively pitch upcoming video topics out to tech brands ahead of time to fill open integration slots.
+    - CTA: Tailored question asking if they have open sponsorship slots in their upcoming recording schedule that an agency could pitch for.
 
 - Structure for each draft:
   - Greeting: "Hey [Name],"
   - Paragraph 1: Hook & Bridge (~25-35 words)
-  - Paragraph 2: Honest Creator Benefit (~15-20 words, no banned clichés)
-  - CTA: Dynamic, low-friction closing question (~5-10 words, answerable in 1 word)
+  - Paragraph 2: Broker/Agency Value Proposition (~15-20 words, no banned clichés, no fake company in mind)
+  - CTA: Dynamic, low-friction closing question tailored to Paragraph 2 (~5-10 words, answerable in 1 word)
   - Sign-off: "Best, Safwan | Fylint"
 
 ### Step 3: The Last Look
 Before finalizing, verify:
 1. Is each email strictly between 50 and 80 words?
-2. Did any draft use ANY of the banned stock clichés ("lowball inbox pitches", "vetted B2B brands", "negotiation back-and-forth", "Worth a quick chat?")? If yes, rewrite it completely!
-3. Are all 3 drafts genuinely different in phrasing, angle, and CTA?
-4. Are all claims 100% honest (no phantom sponsors or fake budgets)?
-5. Would a stranger know I watched the video?
-6. Could the creator reply to each CTA with a single word?
-7. Did any subject line use banned templates ("doing it the hard way", "quick thought safwan", "the easy way", "a simpler way")? Are all 3 subject lines 100% unique and specific to the tools and workflows in this video?
+2. Did any draft pitch as if Safwan already has a specific company or brand in mind? (e.g. "company in mind", "company ideas", "tool that wants to sponsor you"). If yes, REWRITE IT IMMEDIATELY to frame Fylint as an agency/brokerage representing the creator!
+3. Did any draft use ANY of the banned stock clichés ("lowball inbox pitches", "vetted B2B brands", "negotiation back-and-forth", "Worth a quick chat?")? If yes, rewrite it completely!
+4. Are all 3 drafts genuinely different in phrasing, angle, and CTA?
+5. Are all claims 100% honest (no phantom sponsors or fake budgets)?
+6. Would a stranger know I watched the video?
+7. Could the creator reply to each CTA with a single word?
+8. Did any subject line use banned templates? Are all 3 subject lines 100% unique and specific to the tools and workflows in this video?
 
 Format your response clearly with:
 ### 1. Personalization Hooks
@@ -223,13 +237,13 @@ Format your response clearly with:
 - **Alternative 2:** ...
 
 ### 3. Outreach Drafts
-#### Option A (Monetization & Flat Rates):
+#### Option A (Agency Deal Sourcing):
 ...
 
-#### Option B (Software Category Fit):
+#### Option B (Rate Negotiation & Placement):
 ...
 
-#### Option C (Production Pipeline):
+#### Option C (Production Calendar Roster):
 ...
 """
     return prompt.strip()
@@ -382,9 +396,9 @@ def parse_generated_output(output: str, video_id: str = "") -> dict[str, Any]:
 
     # 3. Parse Drafts
     draft_patterns = [
-        ("option_a", "Viewer Trust & Monetization", r"####\s+Option A[^\n]*:\s*\n(.*?)(?=####\s+Option B|\Z)"),
-        ("option_b", "Software Category Fit", r"####\s+Option B[^\n]*:\s*\n(.*?)(?=####\s+Option C|\Z)"),
-        ("option_c", "Production Pipeline & Calendar", r"####\s+Option C[^\n]*:\s*\n(.*?)(?=\Z)"),
+        ("option_a", "Agency Deal Sourcing", r"####\s+Option A[^\n]*:\s*\n(.*?)(?=####\s+Option B|\Z)"),
+        ("option_b", "Rate Negotiation & Placement", r"####\s+Option B[^\n]*:\s*\n(.*?)(?=####\s+Option C|\Z)"),
+        ("option_c", "Production Calendar Roster", r"####\s+Option C[^\n]*:\s*\n(.*?)(?=\Z)"),
     ]
 
     for key, name, pat in draft_patterns:

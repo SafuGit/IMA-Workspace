@@ -826,9 +826,9 @@ export default function GenerateEmailView({
             {/* Draft Tabs */}
             <div className="flex flex-wrap gap-2">
               {[
-                { key: "option_a", label: "Option A", desc: "Monetization & Flat Rates" },
-                { key: "option_b", label: "Option B", desc: "Software Category Fit" },
-                { key: "option_c", label: "Option C", desc: "Production Pipeline" },
+                { key: "option_a", label: "Option A", desc: "Agency Deal Sourcing" },
+                { key: "option_b", label: "Option B", desc: "Rate Negotiation & Placement" },
+                { key: "option_c", label: "Option C", desc: "Production Calendar Roster" },
               ].map((tab) => {
                 const isActive = selectedDraftKey === tab.key;
                 return (

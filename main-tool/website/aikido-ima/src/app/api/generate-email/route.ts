@@ -51,9 +51,9 @@ function parseMarkdownOutput(output: string, videoId: string): {
 
   // 3. Parse Drafts
   const draftSpecs = [
-    { key: "option_a", name: "Viewer Trust & Monetization", regex: /####\s+Option A[^\n]*:\s*\n([\s\S]*?)(?=####\s+Option B|$)/i, subj: subject_lines.primary },
-    { key: "option_b", name: "Software Category Fit", regex: /####\s+Option B[^\n]*:\s*\n([\s\S]*?)(?=####\s+Option C|$)/i, subj: subject_lines.alternative_1 },
-    { key: "option_c", name: "Production Pipeline & Calendar", regex: /####\s+Option C[^\n]*:\s*\n([\s\S]*?)$/i, subj: subject_lines.alternative_2 },
+    { key: "option_a", name: "Agency Deal Sourcing", regex: /####\s+Option A[^\n]*:\s*\n([\s\S]*?)(?=####\s+Option B|$)/i, subj: subject_lines.primary },
+    { key: "option_b", name: "Rate Negotiation & Placement", regex: /####\s+Option B[^\n]*:\s*\n([\s\S]*?)(?=####\s+Option C|$)/i, subj: subject_lines.alternative_1 },
+    { key: "option_c", name: "Production Calendar Roster", regex: /####\s+Option C[^\n]*:\s*\n([\s\S]*?)$/i, subj: subject_lines.alternative_2 },
   ];
 
   for (const spec of draftSpecs) {
