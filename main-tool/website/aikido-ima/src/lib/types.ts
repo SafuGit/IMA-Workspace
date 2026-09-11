@@ -100,9 +100,11 @@ export interface InfluencerEmail {
   followup_generated_at: string | null;
   followup_email: string | null;
   followup_sent_at: string | null;
+  creator_responded_at?: string | null;
   created_at: string;
   updated_at: string;
   parsed?: import("./emailFormatter").ParsedOutreachData;
+  followup_status?: import("./emailFormatter").FollowupStatusInfo;
 }
 
 export interface DashboardStats {

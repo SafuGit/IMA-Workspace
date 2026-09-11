@@ -90,6 +90,9 @@ export async function GET(req: NextRequest) {
       pIdx++;
     }
 
+    // Exclude already emailed creators from Channel Triage across all categories
+    conditions.push("NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = c.channel_id AND e.outreach_sent_at IS NOT NULL)");
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     // Count query
@@ -168,11 +171,23 @@ export async function GET(req: NextRequest) {
               AND subscriber_count < 1000000
               AND avg_views > 25000
               AND (avg_engagement_rate > 1 OR (avg_engagement_rate <= 1 AND avg_engagement_rate > 0.01))
+              AND NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = yt_channels.channel_id AND e.outreach_sent_at IS NOT NULL)
           )::int AS qualified,
-          COUNT(*) FILTER (WHERE valid IS NULL)::int AS unreviewed,
-          COUNT(*) FILTER (WHERE valid = TRUE)::int AS approved,
-          COUNT(*) FILTER (WHERE valid = FALSE)::int AS rejected,
-          COUNT(*)::int AS all
+          COUNT(*) FILTER (
+            WHERE valid IS NULL
+              AND NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = yt_channels.channel_id AND e.outreach_sent_at IS NOT NULL)
+          )::int AS unreviewed,
+          COUNT(*) FILTER (
+            WHERE valid = TRUE
+              AND NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = yt_channels.channel_id AND e.outreach_sent_at IS NOT NULL)
+          )::int AS approved,
+          COUNT(*) FILTER (
+            WHERE valid = FALSE
+              AND NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = yt_channels.channel_id AND e.outreach_sent_at IS NOT NULL)
+          )::int AS rejected,
+          COUNT(*) FILTER (
+            WHERE NOT EXISTS (SELECT 1 FROM influencer_emails e WHERE e.channel_id = yt_channels.channel_id AND e.outreach_sent_at IS NOT NULL)
+          )::int AS all
         FROM yt_channels
       `),
     ]);

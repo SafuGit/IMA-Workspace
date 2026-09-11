@@ -5,13 +5,19 @@ import {
   formatOutreachDraft,
   formatOutreachCommentary,
   parseOutreachData,
+  computeFollowupStatus,
 } from "@/lib/emailFormatter";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status") || "pending"; // pending | sent | all
+    const status = searchParams.get("status") || "pending"; // pending | sent | followup | all
     const channelId = searchParams.get("channelId");
+
+    // Ensure creator_responded_at column exists in DB if possible
+    try {
+      await query(`ALTER TABLE influencer_emails ADD COLUMN IF NOT EXISTS creator_responded_at TIMESTAMPTZ`);
+    } catch {}
 
     const conditions: string[] = [];
     const params: unknown[] = [];
@@ -19,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     if (status === "pending") {
       conditions.push("e.outreach_draft IS NOT NULL AND e.outreach_sent_at IS NULL");
-    } else if (status === "sent") {
+    } else if (status === "sent" || status === "followup" || status === "responded") {
       conditions.push("e.outreach_sent_at IS NOT NULL");
     }
 
@@ -49,6 +55,10 @@ export async function GET(req: NextRequest) {
         e.outreach_sent_at,
         e.followup_commentary,
         e.followup_draft,
+        e.followup_generated_at,
+        e.followup_email,
+        e.followup_sent_at,
+        e.creator_responded_at,
         e.created_at,
         e.updated_at
       FROM influencer_emails e
@@ -62,11 +72,36 @@ export async function GET(req: NextRequest) {
       LIMIT 100
     `;
 
-    const rawEmails = await query<InfluencerEmail>(sql, params);
-    const emails = rawEmails.map((e) => ({
-      ...e,
-      parsed: parseOutreachData(e.outreach_draft, e.outreach_commentary),
-    }));
+    let rawEmails: InfluencerEmail[] = [];
+    try {
+      rawEmails = await query<InfluencerEmail>(sql, params);
+    } catch {
+      // If creator_responded_at column is missing on restricted db user, query without it
+      const fallbackSql = sql.replace("e.creator_responded_at,", "NULL AS creator_responded_at,");
+      rawEmails = await query<InfluencerEmail>(fallbackSql, params);
+    }
+
+    let emails = rawEmails.map((e) => {
+      const parsed = parseOutreachData(e.outreach_draft, e.outreach_commentary);
+      const followup_status = computeFollowupStatus(
+        e.outreach_sent_at,
+        e.creator_responded_at,
+        e.followup_sent_at,
+        e.followup_draft,
+        e.followup_commentary
+      );
+      return {
+        ...e,
+        parsed,
+        followup_status,
+      };
+    });
+
+    if (status === "followup") {
+      emails = emails.filter((e) => !e.followup_status?.isResponded);
+    } else if (status === "responded") {
+      emails = emails.filter((e) => e.followup_status?.isResponded);
+    }
 
     return NextResponse.json({ emails });
   } catch (err: unknown) {
