@@ -7,11 +7,11 @@ module.exports = {
       name: "aikido-web",
       cwd: "/srv/ima/safwano/main-tool/website/aikido-ima",
       script: "npm",
-      args: "run start -- -p 3000 -H 0.0.0.0",
+      args: "run start -- -p 3001 -H 0.0.0.0",
       exec_mode: "fork",
       env: {
         NODE_ENV: "production",
-        PORT: "3000",
+        PORT: "3001",
         HOSTNAME: "0.0.0.0",
       },
       autorestart: true,
