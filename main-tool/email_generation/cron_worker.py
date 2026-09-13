@@ -149,6 +149,7 @@ def fetch_approved_creators_needing_emails(limit: int = 20, channel_id: str | No
                         LIMIT 1
                     ) v ON TRUE
                     WHERE c.valid = TRUE
+                      AND COALESCE(c.videos_last_month, 0) > 0
                       AND c.channel_id NOT IN (
                           SELECT channel_id FROM influencer_emails WHERE outreach_draft IS NOT NULL
                       )
