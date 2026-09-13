@@ -38,5 +38,22 @@ module.exports = {
       out_file: "/srv/ima/safwano/logs/api-out.log",
       time: true,
     },
+    {
+      name: "fylint-cron",
+      cwd: "/srv/ima/safwano",
+      script: "main-tool/email_generation/cron_worker.py",
+      interpreter: "/srv/ima/safwano/.venv/bin/python",
+      args: "--daemon --schedule 13:05 --batch-size 20",
+      exec_mode: "fork",
+      env: {
+        PYTHONUNBUFFERED: "1",
+      },
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "1G",
+      error_file: "/srv/ima/safwano/logs/cron-error.log",
+      out_file: "/srv/ima/safwano/logs/cron-out.log",
+      time: true,
+    },
   ],
 };

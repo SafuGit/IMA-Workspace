@@ -71,6 +71,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path in ("/api/emails/cron", "/api/cron/generate", "/api/cron/outreach"):
+            try:
+                from email_generation.cron_worker import run_cron_batch
+                batch_res = run_cron_batch(batch_size=20)
+                self._set_headers(200)
+                self.wfile.write(json.dumps(batch_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         # Default info page
         payload = {
             "service": "Fylint Email Generation API",
@@ -108,6 +119,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 results = check_and_generate_followups()
                 self._set_headers(200)
                 self.wfile.write(json.dumps({"success": True, "results": results}).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
+        if self.path in ("/api/emails/cron", "/api/cron/generate", "/api/cron/outreach"):
+            try:
+                from email_generation.cron_worker import run_cron_batch
+                batch_res = run_cron_batch(batch_size=20)
+                self._set_headers(200)
+                self.wfile.write(json.dumps(batch_res).encode("utf-8"))
             except Exception as e:
                 self._set_headers(500)
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
@@ -169,6 +191,45 @@ class ReusableHTTPServer(HTTPServer):
     allow_reuse_address = True
 
 
+import threading
+import time
+from datetime import datetime, timezone, timedelta
+
+
+def _start_background_cron_scheduler():
+    """Start background daemon thread that triggers the daily batch dynamically based on DB settings."""
+    bst_zone = timezone(timedelta(hours=6))
+
+    def scheduler_thread():
+        last_run_date = None
+        last_reported_time = None
+        print("[Cron Scheduler] Background scheduler initialized with dynamic DB config.", flush=True)
+        while True:
+            try:
+                from email_generation.cron_worker import get_cron_schedule_config, run_cron_batch
+                target_time_str, batch_size = get_cron_schedule_config()
+                parts = target_time_str.split(":")
+                target_hour = int(parts[0])
+                target_minute = int(parts[1]) if len(parts) > 1 else 0
+
+                if last_reported_time != target_time_str:
+                    print(f"[Cron Scheduler] Schedule updated from DB: {target_hour:02d}:{target_minute:02d} BST (UTC+6) | Batch: {batch_size} creators", flush=True)
+                    last_reported_time = target_time_str
+
+                now_bst = datetime.now(bst_zone)
+                today_str = now_bst.strftime("%Y-%m-%d")
+                if now_bst.hour == target_hour and now_bst.minute == target_minute and last_run_date != today_str:
+                    print(f"\n[Cron Scheduler] >>> TRIGGERED at {now_bst.strftime('%Y-%m-%d %H:%M:%S')} BST (Target: {target_time_str})! Running daily batch of {batch_size} approved creators... <<<", flush=True)
+                    run_cron_batch(batch_size=batch_size)
+                    last_run_date = today_str
+            except Exception as e:
+                print(f"[Cron Scheduler Error] {e}", file=sys.stderr, flush=True)
+            time.sleep(15)
+
+    t = threading.Thread(target=scheduler_thread, daemon=True)
+    t.start()
+
+
 def run_server(host: str = "0.0.0.0", port: int = 8000):
     """Run the standalone HTTP server."""
     server_address = (host, port)
@@ -177,8 +238,13 @@ def run_server(host: str = "0.0.0.0", port: int = 8000):
     print("  Fylint Email Generation API Server", flush=True)
     print(f"  Listening on: http://{host}:{port}", flush=True)
     print(f"  Endpoint    : http://{host}:{port}/api/generate-email", flush=True)
+    print(f"  Cron API    : http://{host}:{port}/api/emails/cron", flush=True)
     print(f"  Healthcheck : http://{host}:{port}/health", flush=True)
     print("=" * 60, flush=True)
+
+    # Launch daily dynamic cron scheduler
+    _start_background_cron_scheduler()
+
     try:
         httpd.serve_forever()
     except (KeyboardInterrupt, SystemExit):
