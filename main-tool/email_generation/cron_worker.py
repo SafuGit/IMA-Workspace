@@ -268,8 +268,75 @@ def run_cron_batch(batch_size: int = 20, dry_run: bool = False, target_channel_i
             # 1. Run pipeline (transcript + top comments + hook extraction + agy Gemini prompt)
             pipeline_res = run_pipeline(video_id)
 
-            draft = pipeline_res.get("raw_output") or pipeline_res.get("email") or ""
-            commentary = pipeline_res.get("hooks") or "Personalized hook based on video topic and viewer comments."
+            drafts_data = pipeline_res.get("drafts") or {}
+            subj_data = pipeline_res.get("subject_lines") or {}
+            hooks_data = pipeline_res.get("hooks") or []
+
+            # If pipeline returned structured drafts, build clean multi-draft string
+            if drafts_data and ("option_a" in drafts_data or "option_b" in drafts_data):
+                draft_parts = ["=== ACTIVE_KEY: option_a ===\n"]
+                for key, name in [
+                    ("option_a", "Agency Deal Sourcing"),
+                    ("option_b", "Rate Negotiation & Placement"),
+                    ("option_c", "Production Calendar Roster"),
+                ]:
+                    d = drafts_data.get(key, {})
+                    subj = (
+                        d.get("subject")
+                        or subj_data.get(
+                            "primary"
+                            if key == "option_a"
+                            else ("alternative_1" if key == "option_b" else "alternative_2")
+                        )
+                        or ""
+                    )
+                    body = d.get("body") or ""
+                    draft_parts.append(f"=== DRAFT_START: {key} | {name} ===")
+                    draft_parts.append(f"Subject: {subj}")
+                    draft_parts.append(f"Body:\n{body.strip()}")
+                    draft_parts.append("=== DRAFT_END ===\n")
+                draft = "\n".join(draft_parts).strip()
+            else:
+                draft = pipeline_res.get("raw_output") or pipeline_res.get("email") or ""
+
+            # Build structured commentary if hooks and subject lines exist
+            commentary_parts = []
+            if subj_data.get("primary") or subj_data.get("alternative_1") or subj_data.get("alternative_2"):
+                sl_part = "=== SUBJECT_LINES ===\n"
+                if subj_data.get("primary"):
+                    sl_part += f"Primary: {subj_data['primary']}\n"
+                if subj_data.get("alternative_1"):
+                    sl_part += f"Alternative: {subj_data['alternative_1']}\n"
+                if subj_data.get("alternative_2"):
+                    sl_part += f"Alternative: {subj_data['alternative_2']}\n"
+                commentary_parts.append(sl_part.strip())
+
+            if isinstance(hooks_data, list) and hooks_data:
+                hooks_part = "=== HOOKS ===\n"
+                for h_idx, h in enumerate(hooks_data, 1):
+                    tag = h.get("tag") or "transcript-only"
+                    ts = h.get("timestamp") or "00:00"
+                    txt = h.get("text") or ""
+                    analysis = h.get("what_happens") or ""
+                    link = h.get("video_link") or ""
+                    is_rec = "true" if h.get("is_recommended") else "false"
+                    hooks_part += f"--- HOOK {h_idx} [{tag} | {ts}] ---\n"
+                    hooks_part += f"Text: {txt}\n"
+                    if link:
+                        hooks_part += f"Video Link: {link}\n"
+                    if analysis:
+                        hooks_part += f"Analysis: {analysis}\n"
+                    if h.get("is_recommended"):
+                        hooks_part += f"Recommended: {is_rec}\n"
+                    hooks_part += "\n"
+                commentary_parts.append(hooks_part.strip())
+
+            if commentary_parts:
+                commentary = "\n\n".join(commentary_parts).strip()
+            else:
+                raw_hooks = pipeline_res.get("hooks")
+                commentary = str(raw_hooks) if raw_hooks else "Personalized hook based on video topic and viewer comments."
+
             transcript = pipeline_res.get("transcript") or ""
 
             # Standard outreach contact placeholder or handle
