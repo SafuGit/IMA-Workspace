@@ -89,7 +89,7 @@ def generate_followup_copy(stage: int, creator_name: str, video_title: str, orig
         body = (
             f"Hey {clean_name},\n\n"
             f"Following up on my note about your \"{clean_video}\" video.\n\n"
-            f"We work as a sponsorship brokerage for tech creators, pitching your channel directly to relevant software brands and negotiating flat rates so you don't deal with the admin.\n\n"
+            f"You can get relevant software sponsorships without handling the outreach or negotiations yourself. Fylint pitches your channel to brands that fit your content and handles the deal process.\n\n"
             f"Curious if you have any open integration slots in your upcoming recording schedule?\n\n"
             f"Best,\nSafwan | Fylint"
         )
@@ -97,7 +97,7 @@ def generate_followup_copy(stage: int, creator_name: str, video_title: str, orig
         # Day 21: Commercial valuation angle (~35 words)
         body = (
             f"Hey {clean_name},\n\n"
-            f"Wanted to circle back on this. Given the retention and viewer trust on your channel, your tutorials command premium flat rates in the current software sponsor market.\n\n"
+            f"Wanted to circle back on this. Given the retention and viewer trust on your channel, you can secure premium flat rates in the current software sponsor market without dealing with weak affiliate offers, with Fylint managing the negotiations.\n\n"
             f"Curious to see where we'd benchmark your integration pricing?\n\n"
             f"Best,\nSafwan | Fylint"
         )

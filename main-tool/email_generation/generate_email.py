@@ -117,21 +117,32 @@ Your task is two-fold:
 1. Find high-converting personalization hooks from the video details below.
 2. Draft 3 personalized cold outreach emails to the creator offering sponsorship brokerage / agency representation.
 
-CRITICAL BROKER / AGENCY FRAMING (NON-NEGOTIABLE):
-- Fylint is a sponsorship brokerage / agency representing tech and software creators.
-- You are reaching out to the creator as a BROKER / AGENCY seeking to represent their channel and secure sponsorships for them from relevant tech brands.
-- DO NOT pitch as if you already have a specific company, sponsor, or brand deal in mind.
-- STRICTLY BANNED PHRASES:
-  * "I have a company in mind" / "I have a few company ideas for your upcoming videos"
-  * "I have an AI tool / software that wants to sponsor this"
-  * "A brand asked me to reach out to you"
-  * "We want to sponsor your next video with..."
-  * Any phrasing implying a pre-existing, pre-selected sponsor is already waiting.
-- WHY: If you write as if you have a specific company in mind, creators will immediately ask "What company is it?" and "What's the budget?". Pitching as if you have a sponsor in hand when no deal is signed is misleading.
-- HOW TO PHRASE THE BROKER / AGENCY OFFER:
-  * State clearly and conversationally that Fylint is a sponsorship brokerage / agency representing tech creators.
-  * Frame the value around representation: actively pitching their channel out to relevant software companies in their space, securing high flat integration rates, and handling the contract/admin work on their behalf with zero upfront fees (earning only when deals close).
-  * Keep Paragraph 2 to one natural, peer-level sentence (~15–20 words).
+CRITICAL CREATOR-FOCUSED FRAMING (NON-NEGOTIABLE):
+- MAIN RULE: Stop leading with what Fylint/I/we do. Lead with what the creator gets or can achieve by working with Fylint.
+- The sentence in Paragraph 2 must directly answer: "What's in it for the creator?"
+- STRICTLY BANNED AGENCY-CENTRIC OPENERS & PHRASES:
+  * "I run Fylint..." / "I'm Safwan and I run Fylint..."
+  * "We represent..." / "We're a brokerage representing..."
+  * "We pitch your channel..." / "We actively pitch..."
+  * "We handle..." / "We secure..."
+  * "I line up B2B sponsors..."
+- BENEFIT-FOCUSED PHRASING (Creator must be the grammatical subject):
+  * "You can get..."
+  * "You can fill..."
+  * "You’ll get access to..."
+  * "You can secure..."
+  * "This gives you..."
+  * "You won’t have to..."
+  * "Fylint can help you..."
+- CONCRETE EXAMPLE:
+  - INSTEAD OF: "I run Fylint, a brokerage representing tech creators. We actively pitch your channel to relevant software companies and handle negotiations on your behalf."
+  - WRITE: "You can get relevant software sponsorships without handling the outreach or negotiations yourself. Fylint pitches your channel to brands that fit your content and handles the deal process."
+- MENTION FYLINT NATURALLY: Mention Fylint naturally in the second clause or follow-up sentence so the creator clearly understands who provides the benefit, but NEVER let Fylint or "we" lead the sentence.
+- STRICTLY BANNED — PITCHING AS IF A COMPANY IS IN MIND:
+  * NEVER write copy implying you already have a specific sponsor, company, or pre-set campaign waiting (e.g. "I have a company in mind", "I have an AI tool that wants to sponsor this", "A brand asked me to reach out").
+  * WHY: Creators will ask "What company?" and "What's the budget?", exposing the pitch as fake when no deal is signed.
+  * Pitch the CREATOR'S BENEFITS from agency representation, not a phantom sponsor.
+- STRICT LENGTH: Keep the entire email UNDER 80 WORDS total (50 to 75 words is ideal).
 
 TARGET VIDEO DETAILS:
 - Title: {title}
@@ -160,7 +171,7 @@ INSTRUCTIONS:
 - State which hook is recommended as the lead and why.
 
 ### Step 2: Generate 3 Distinct Outreach Email Drafts
-- STRICT LENGTH: Each email must be 50 to 80 words total (Absolute maximum 90 words). The shorter the email, the higher the reply rate.
+- STRICT LENGTH: Each email must be strictly UNDER 80 WORDS total (50 to 75 words). Shorter emails get drastically higher reply rates.
 - Subject Lines (Provide 3 completely distinct, video-specific options):
   - BANNED SALES WORDS: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry', 'proposal'.
   - BANNED FILLER TEMPLATES: NEVER use generic canned subject lines:
@@ -185,28 +196,28 @@ INSTRUCTIONS:
   - "so you don't have to waste time"
   - "Worth a quick chat?" / "Worth exploring for your next video?" / "Curious to see what that looks like?"
 
-- DRAFTS VARIETY REQUIREMENT (3 Distinct Broker/Agency Angles):
-  Generate THREE (3) completely distinct outreach email drafts (Draft A, Draft B, Draft C). Each draft must pair with a different hook from Step 1, phrase the broker/agency representation from a distinct angle, use fresh phrasing and vocabulary, and end with a uniquely tailored CTA:
+- DRAFTS VARIETY REQUIREMENT (3 Distinct Creator-Focused Angles):
+  Generate THREE (3) completely distinct outreach email drafts (Draft A, Draft B, Draft C). Each draft must pair with a different hook from Step 1, make the creator the subject of Paragraph 2, use fresh phrasing and vocabulary, and end with a uniquely tailored CTA:
 
-  * **Draft A: Agency Representation & Deal Sourcing** (pairs with Hook 1)
+  * **Draft A: Direct Software Sponsorships & Outreach Relief** (pairs with Hook 1)
     - Hook: Bridge from Hook 1 directly into why software brands look for creators with this level of clarity/trust.
-    - Offer: 1 casual sentence stating that Safwan runs Fylint, a sponsorship brokerage representing tech creators — taking their channel directly to relevant software companies and negotiating deals on their behalf.
-    - CTA: Tailored question asking if they're open to working with an agency/brokerage to bring in sponsorships for their channel (answerable in 1 word).
+    - Offer (Creator-focused): 1 natural sentence leading with what the creator gets — e.g., you can get relevant software sponsorships without handling the outreach or negotiations yourself, with Fylint pitching your channel to brands that fit your content and managing the deal process.
+    - CTA: Tailored question asking if they're open to an agency bringing in and negotiating sponsorships for their channel (answerable in 1 word).
 
-  * **Draft B: Rate Negotiation & Placement** (pairs with Hook 2)
+  * **Draft B: Premium Flat Rates & Rate Benchmarking** (pairs with Hook 2)
     - Hook: Bridge from Hook 2 into the channel's high audience trust and commercial positioning.
-    - Offer: 1 casual sentence explaining that as a brokerage, Fylint pitches tech creators to software brands for premium flat rates rather than weak affiliate cuts, handling negotiations so they don't have to deal with lowball offers.
-    - CTA: Tailored question asking if they're curious to see where an agency would benchmark their channel's integration rates in the current market.
+    - Offer (Creator-focused): 1 natural sentence leading with what the creator gets — e.g., you can secure premium flat rates for your tutorials rather than weak affiliate cuts, with Fylint handling rate negotiations on your behalf.
+    - CTA: Tailored question asking if they're curious to see where an agency would benchmark their channel's integration pricing in this market.
 
-  * **Draft C: Production Calendar & Roster Placement** (pairs with Hook 3)
+  * **Draft C: Production Pipeline & Filling Upcoming Slots** (pairs with Hook 3)
     - Hook: Bridge from Hook 3 into the creator's upcoming production flow or recording schedule.
-    - Offer: 1 casual sentence offering to represent their channel and proactively pitch upcoming video topics out to tech brands ahead of time to fill open integration slots.
-    - CTA: Tailored question asking if they have open sponsorship slots in their upcoming recording schedule that an agency could pitch for.
+    - Offer (Creator-focused): 1 natural sentence leading with what the creator gets — e.g., you can fill upcoming video integration slots ahead of time, with Fylint pitching your planned tutorial topics directly to software brands in your space.
+    - CTA: Tailored question asking if they have open sponsorship slots in their upcoming schedule that an agency could pitch for.
 
 - Structure for each draft:
   - Greeting: "Hey [Name],"
   - Paragraph 1: Hook & Bridge (~25-35 words)
-  - Paragraph 2: Broker/Agency Value Proposition (~15-20 words, no banned clichés, no fake company in mind)
+  - Paragraph 2: Creator-Centric Value Proposition (~15-20 words, creator as subject, no banned clichés, no fake company in mind)
   - CTA: Dynamic, low-friction closing question tailored to Paragraph 2 (~5-10 words, answerable in 1 word)
   - Sign-off: "Best, Safwan | Fylint"
 
