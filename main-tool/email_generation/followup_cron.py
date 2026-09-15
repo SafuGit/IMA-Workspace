@@ -3,9 +3,9 @@ email_generation/followup_cron.py
 ---------------------------------
 Automated background worker that checks sent outreach emails and automatically
 schedules and drafts follow-up messages at:
-- Day 3 (Touch 1: Slot check / open integration inquiry)
-- Day 7 (Touch 2: Commercial rate valuation benchmarking)
-- Day 21 (Touch 3: Respectful breakup touch)
+- Day 7 (Touch 1: Slot check / open integration inquiry - First touch)
+- Day 21 (Touch 2: Commercial rate valuation benchmarking - Second touch)
+- Day 30 (Touch 3: Respectful breakup touch - Last touch)
 
 Stops immediately if creator responded.
 
@@ -85,7 +85,7 @@ def generate_followup_copy(stage: int, creator_name: str, video_title: str, orig
         subj = f"Re: {clean_video}"
 
     if stage == 1:
-        # Day 3: Quick broker touch - open recording slots inquiry (~35 words)
+        # Day 7: Quick broker touch - open recording slots inquiry (~35 words)
         body = (
             f"Hey {clean_name},\n\n"
             f"Following up on my note about your \"{clean_video}\" video.\n\n"
@@ -94,7 +94,7 @@ def generate_followup_copy(stage: int, creator_name: str, video_title: str, orig
             f"Best,\nSafwan | Fylint"
         )
     elif stage == 2:
-        # Day 7: Commercial valuation angle (~35 words)
+        # Day 21: Commercial valuation angle (~35 words)
         body = (
             f"Hey {clean_name},\n\n"
             f"Wanted to circle back on this. Given the retention and viewer trust on your channel, your tutorials command premium flat rates in the current software sponsor market.\n\n"
@@ -102,7 +102,7 @@ def generate_followup_copy(stage: int, creator_name: str, video_title: str, orig
             f"Best,\nSafwan | Fylint"
         )
     else:
-        # Day 21: Respectful breakup touch (~30 words)
+        # Day 30: Respectful breakup touch (~30 words)
         body = (
             f"Hey {clean_name},\n\n"
             f"Assuming you're all set on brand partnerships for now, so I won't crowd your inbox.\n\n"
@@ -194,20 +194,20 @@ def check_and_generate_followups(dry_run: bool = False, force: bool = False) -> 
             if sent_at.tzinfo is None:
                 sent_at = sent_at.replace(tzinfo=timezone.utc)
 
-            day3 = sent_at + timedelta(days=3)
             day7 = sent_at + timedelta(days=7)
             day21 = sent_at + timedelta(days=21)
+            day30 = sent_at + timedelta(days=30)
 
             # Determine stage
             if fu2_sent:
                 stage = 3
-                target_date = day21
+                target_date = day30
             elif fu1_sent:
                 stage = 2
-                target_date = day7
+                target_date = day21
             else:
                 stage = 1
-                target_date = day3
+                target_date = day7
 
             if now >= target_date:
                 counts["due"] += 1
