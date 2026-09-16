@@ -1,8 +1,8 @@
 [submodule "main-tool/omar-finder"]
 	path = main-tool/omar-finder
 	url = https://github.com/OmarBaatti/aikido-ima.git
-	branch = main
+	branch = feature/brand-outreach
 [submodule "main-tool/website/aikido-ima"]
 	path = main-tool/website/aikido-ima
 	url = https://github.com/SafuGit/aikido-web.git
-	branch = main
+	branch = feature/brand-outreach
