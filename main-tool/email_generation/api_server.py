@@ -82,6 +82,24 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path.startswith(("/api/brand-emails/cron", "/brand-emails/cron")):
+            try:
+                import urllib.parse
+                from email_generation.brand_cron_worker import run_brand_cron_batch
+                query_str = self.path.split("?")[1] if "?" in self.path else ""
+                params = urllib.parse.parse_qs(query_str) if query_str else {}
+                dry_run = params.get("dry_run", ["false"])[0].lower() in ("true", "1")
+                batch_size = int(params.get("batch_size", ["20"])[0])
+                brand_id = int(params["brand_id"][0]) if "brand_id" in params else None
+
+                batch_res = run_brand_cron_batch(batch_size=batch_size, dry_run=dry_run, brand_id=brand_id)
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "result": batch_res}).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         # Default info page
         payload = {
             "service": "Fylint Email Generation API",
@@ -130,6 +148,37 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 batch_res = run_cron_batch(batch_size=20)
                 self._set_headers(200)
                 self.wfile.write(json.dumps(batch_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
+        if self.path.startswith(("/api/brand-emails/cron", "/brand-emails/cron")):
+            try:
+                from email_generation.brand_cron_worker import run_brand_cron_batch
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(content_length).decode("utf-8")) if content_length > 0 else {}
+                dry_run = bool(body.get("dry_run", False))
+                batch_size = int(body.get("batch_size", 20))
+                brand_id = int(body["brand_id"]) if "brand_id" in body and body["brand_id"] else None
+
+                batch_res = run_brand_cron_batch(batch_size=batch_size, dry_run=dry_run, brand_id=brand_id)
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "result": batch_res}).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
+        if self.path.startswith(("/api/brands/discover", "/brands/discover")):
+            try:
+                from workflows.brand_discovery import discover_and_index_brands
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(content_length).decode("utf-8")) if content_length > 0 else {}
+                batch_size = int(body.get("batch_size", 150))
+                res = discover_and_index_brands(video_batch_size=batch_size)
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "result": res}).encode("utf-8"))
             except Exception as e:
                 self._set_headers(500)
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
