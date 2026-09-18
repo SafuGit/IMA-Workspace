@@ -171,8 +171,20 @@ def save_generated_email(
     transcript: str | None,
     outreach_commentary: str | None,
     outreach_draft: str | None,
+    *,
+    drafts_array: list[str] | None = None,
+    subject_lines_array: list[str] | None = None,
+    hooks_json: list[dict] | None = None,
+    active_draft_key: str = "option_a",
+    recommendation: str | None = None,
 ) -> None:
-    """Save generated outreach email into the influencer_emails table."""
+    """Save generated outreach email into the influencer_emails table.
+
+    Writes structured data to the new normalised columns (drafts, subject_lines,
+    hooks, active_draft_key, recommendation) as the source of truth.  The legacy
+    outreach_draft / outreach_commentary text blobs are still written for raw
+    reference.
+    """
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -184,8 +196,17 @@ def save_generated_email(
                     transcript,
                     outreach_commentary,
                     outreach_draft,
+                    drafts,
+                    subject_lines,
+                    hooks,
+                    active_draft_key,
+                    recommendation,
                     outreach_generated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, now())
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    now()
+                )
                 ON CONFLICT DO NOTHING
             """
             cur.execute(
@@ -197,6 +218,11 @@ def save_generated_email(
                     transcript,
                     outreach_commentary,
                     outreach_draft,
+                    drafts_array,
+                    subject_lines_array,
+                    json.dumps(hooks_json) if hooks_json is not None else None,
+                    active_draft_key,
+                    recommendation,
                 ),
             )
             conn.commit()
@@ -272,78 +298,43 @@ def run_cron_batch(batch_size: int = 20, dry_run: bool = False, target_channel_i
             drafts_data = pipeline_res.get("drafts") or {}
             subj_data = pipeline_res.get("subject_lines") or {}
             hooks_data = pipeline_res.get("hooks") or []
+            recommendation_text = pipeline_res.get("recommendation") or ""
 
-            # If pipeline returned structured drafts, build clean multi-draft string
-            if drafts_data and ("option_a" in drafts_data or "option_b" in drafts_data):
-                draft_parts = ["=== ACTIVE_KEY: option_a ===\n"]
-                for key, name in [
-                    ("option_a", "Agency Deal Sourcing"),
-                    ("option_b", "Rate Negotiation & Placement"),
-                    ("option_c", "Production Calendar Roster"),
-                ]:
-                    d = drafts_data.get(key, {})
-                    subj = (
-                        d.get("subject")
-                        or subj_data.get(
-                            "primary"
-                            if key == "option_a"
-                            else ("alternative_1" if key == "option_b" else "alternative_2")
-                        )
-                        or ""
-                    )
-                    body = d.get("body") or ""
-                    draft_parts.append(f"=== DRAFT_START: {key} | {name} ===")
-                    draft_parts.append(f"Subject: {subj}")
-                    draft_parts.append(f"Body:\n{body.strip()}")
-                    draft_parts.append("=== DRAFT_END ===\n")
-                draft = "\n".join(draft_parts).strip()
-            else:
-                draft = pipeline_res.get("raw_output") or pipeline_res.get("email") or ""
+            # --- Build structured column arrays ---
+            draft_key_order = ["option_a", "option_b", "option_c"]
+            subj_key_order = ["primary", "alternative_1", "alternative_2"]
 
-            # Build structured commentary if hooks and subject lines exist
-            commentary_parts = []
-            if subj_data.get("primary") or subj_data.get("alternative_1") or subj_data.get("alternative_2"):
-                sl_part = "=== SUBJECT_LINES ===\n"
-                if subj_data.get("primary"):
-                    sl_part += f"Primary: {subj_data['primary']}\n"
-                if subj_data.get("alternative_1"):
-                    sl_part += f"Alternative: {subj_data['alternative_1']}\n"
-                if subj_data.get("alternative_2"):
-                    sl_part += f"Alternative: {subj_data['alternative_2']}\n"
-                commentary_parts.append(sl_part.strip())
+            drafts_array = []
+            for key in draft_key_order:
+                d = drafts_data.get(key, {})
+                drafts_array.append((d.get("body") or "").strip())
 
-            if isinstance(hooks_data, list) and hooks_data:
-                hooks_part = "=== HOOKS ===\n"
-                for h_idx, h in enumerate(hooks_data, 1):
-                    tag = h.get("tag") or "transcript-only"
-                    ts = h.get("timestamp") or "00:00"
-                    txt = h.get("text") or ""
-                    analysis = h.get("what_happens") or ""
-                    link = h.get("video_link") or ""
-                    is_rec = "true" if h.get("is_recommended") else "false"
-                    hooks_part += f"--- HOOK {h_idx} [{tag} | {ts}] ---\n"
-                    hooks_part += f"Text: {txt}\n"
-                    if link:
-                        hooks_part += f"Video Link: {link}\n"
-                    if analysis:
-                        hooks_part += f"Analysis: {analysis}\n"
-                    if h.get("is_recommended"):
-                        hooks_part += f"Recommended: {is_rec}\n"
-                    hooks_part += "\n"
-                commentary_parts.append(hooks_part.strip())
+            subject_lines_array = []
+            for sk in subj_key_order:
+                subject_lines_array.append((subj_data.get(sk) or "").strip())
 
-            if commentary_parts:
-                commentary = "\n\n".join(commentary_parts).strip()
-            else:
-                raw_hooks = pipeline_res.get("hooks")
-                commentary = str(raw_hooks) if raw_hooks else "Personalized hook based on video topic and viewer comments."
+            hooks_list = []
+            if isinstance(hooks_data, list):
+                for h in hooks_data:
+                    hooks_list.append({
+                        "tag": h.get("tag") or "transcript-only",
+                        "text": h.get("text") or "",
+                        "timestamp": h.get("timestamp") or "",
+                        "video_link": h.get("video_link") or "",
+                        "what_happens": h.get("what_happens") or "",
+                        "is_recommended": bool(h.get("is_recommended")),
+                    })
+
+            # --- Legacy text blobs (raw reference) ---
+            draft = pipeline_res.get("raw_output") or pipeline_res.get("email") or ""
+            commentary = str(hooks_data) if hooks_data else "Personalized hook based on video topic and viewer comments."
 
             transcript = pipeline_res.get("transcript") or ""
 
             # Standard outreach contact placeholder or handle
             email_address = f"contact@{c.get('channel_handle') or channel_id}.com"
 
-            # 2. Save directly to influencer_emails
+            # 2. Save to influencer_emails with structured columns
             save_generated_email(
                 channel_id=channel_id,
                 video_id=video_id,
@@ -351,6 +342,11 @@ def run_cron_batch(batch_size: int = 20, dry_run: bool = False, target_channel_i
                 transcript=transcript[:5000] if transcript else None,
                 outreach_commentary=commentary,
                 outreach_draft=draft,
+                drafts_array=drafts_array,
+                subject_lines_array=subject_lines_array,
+                hooks_json=hooks_list,
+                active_draft_key="option_a",
+                recommendation=recommendation_text,
             )
 
             print(f"    ✓ Draft saved to DB for {channel_name}!")
