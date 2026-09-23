@@ -157,13 +157,15 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 return
 
             model = data.get("model", "gemini-3.1-pro-high")
+            mode = data.get("mode", "full")
             channel_id = data.get("channel_id")
             channel_name = data.get("channel_name")
 
-            print(f"\n[API Server] Received generation request for: {video_url} (model: {model})")
+            print(f"\n[API Server] Received generation request for: {video_url} (model: {model}, mode: {mode})")
 
             # Run unified email pipeline
-            result = generate_email_pipeline(video_url, model=model)
+            result = generate_email_pipeline(video_url, model=model, mode=mode)
+            result["mode"] = mode
 
             # Supplement channel details if provided in request
             if channel_id and not result.get("channel_id"):
