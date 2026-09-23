@@ -82,6 +82,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path in ("/api/nocodb/sync-sent", "/nocodb/sync-sent"):
+            try:
+                from email_generation.cron_worker import sync_sent_outreach_to_nocodb
+                sync_res = sync_sent_outreach_to_nocodb()
+                self._set_headers(200)
+                self.wfile.write(json.dumps(sync_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         # Default info page
         payload = {
             "service": "Fylint Email Generation API",
@@ -130,6 +141,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 batch_res = run_cron_batch(batch_size=20)
                 self._set_headers(200)
                 self.wfile.write(json.dumps(batch_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
+        if self.path in ("/api/nocodb/sync-sent", "/nocodb/sync-sent"):
+            try:
+                from email_generation.cron_worker import sync_sent_outreach_to_nocodb
+                sync_res = sync_sent_outreach_to_nocodb()
+                self._set_headers(200)
+                self.wfile.write(json.dumps(sync_res).encode("utf-8"))
             except Exception as e:
                 self._set_headers(500)
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))

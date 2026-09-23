@@ -374,13 +374,135 @@ def run_cron_batch(batch_size: int = 20, dry_run: bool = False, target_channel_i
         f"👉 Ready to inspect at: http://aikidoima.duckdns.org/emails"
     )
 
+    # Automatically sync all sent outreach to Naz NocoDB every 24 hours
+    nocodb_sync_res = {}
+    try:
+        nocodb_sync_res = sync_sent_outreach_to_nocodb()
+    except Exception as noco_err:
+        print(f"  [NocoDB Cron Sync Error]: {noco_err}")
+
     return {
         "success": True,
         "total": len(creators),
         "processed": processed,
         "errors": errors,
         "creators": generated_list,
+        "nocodb_sync": nocodb_sync_res,
     }
+
+
+def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
+    """
+    Sync all creators who have been sent outreach to Naz's NocoDB table EMAIL_SENT_SAFWAN.
+    Sends Discord webhook: 'Syncing sent outreach to Naz NocoDB'.
+    """
+    nocodb_url = os.getenv("NOCODB_URL", "http://localhost:8080").rstrip("/")
+    api_token = os.getenv("NOCODB_API_TOKEN", "")
+    table_name = os.getenv("NOCODB_TABLE_ID_EMAIL_SENT", "EMAIL_SENT_SAFWAN")
+
+    if not api_token:
+        print("  [NocoDB Sync] Notice: NOCODB_API_TOKEN is not configured in environment.")
+        return {"success": False, "skipped": True, "reason": "No NOCODB_API_TOKEN configured"}
+
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT
+                    e.channel_id,
+                    COALESCE(c.channel_name, 'Unknown Creator') AS channel_name,
+                    c.channel_handle,
+                    COALESCE(e.email_address, '') AS email_address,
+                    e.video_id,
+                    v.title AS video_title,
+                    e.outreach_email,
+                    e.final_email,
+                    e.subject_lines,
+                    e.outreach_sent_at,
+                    c.subscriber_count,
+                    c.avg_views,
+                    c.avg_engagement_rate
+                FROM influencer_emails e
+                LEFT JOIN yt_channels c ON c.channel_id = e.channel_id
+                LEFT JOIN yt_videos v ON v.video_id = e.video_id
+                WHERE e.outreach_sent_at IS NOT NULL
+                ORDER BY e.outreach_sent_at DESC
+            """)
+            rows = cur.fetchall()
+        conn.close()
+    except Exception as e:
+        print(f"  [NocoDB Sync Error] Failed to fetch sent outreach from DB: {e}")
+        return {"success": False, "error": str(e)}
+
+    if not rows:
+        print("  [NocoDB Sync] No sent outreach creators found in database.")
+        return {"success": True, "total": 0, "synced": 0}
+
+    _, user_ping = get_discord_config()
+    send_discord_log(
+        f"🔄 {user_ping} **Syncing sent outreach to Naz NocoDB...**\n"
+        f"Found **{len(rows)}** sent creator(s). Syncing to table `{table_name}`."
+    )
+
+    endpoint = f"{nocodb_url}/api/v2/tables/{table_name}/records"
+    synced_count = 0
+    import re
+
+    for r in rows:
+        subject = ""
+        if r.get("subject_lines"):
+            sl = r["subject_lines"]
+            if isinstance(sl, list) and sl:
+                subject = sl[0]
+            elif isinstance(sl, dict):
+                subject = sl.get("primary") or next(iter(sl.values()), "")
+        if not subject and (r.get("final_email") or r.get("outreach_email")):
+            m = re.search(r"^Subject:\s*(.+)$", r.get("final_email") or r.get("outreach_email") or "", re.M)
+            if m:
+                subject = m.group(1).strip()
+
+        record_data = {
+            "Channel ID": r["channel_id"],
+            "Channel Name": r["channel_name"],
+            "Channel Handle": r.get("channel_handle") or "",
+            "Email": r["email_address"],
+            "Video ID": r.get("video_id") or "",
+            "Video Title": r.get("video_title") or "",
+            "Subject": subject,
+            "Sent At": str(r.get("outreach_sent_at") or ""),
+            "Subscribers": r.get("subscriber_count") or 0,
+            "Avg Views": r.get("avg_views") or 0,
+            "Engagement Rate": float(r.get("avg_engagement_rate") or 0),
+            "channel_id": r["channel_id"],
+            "channel_name": r["channel_name"],
+            "email": r["email_address"],
+            "subject": subject,
+            "sent_at": str(r.get("outreach_sent_at") or ""),
+        }
+
+        try:
+            req_data = json.dumps(record_data).encode("utf-8")
+            req = urllib.request.Request(
+                endpoint,
+                data=req_data,
+                headers={
+                    "Content-Type": "application/json",
+                    "xc-token": api_token,
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201):
+                    synced_count += 1
+        except Exception as post_err:
+            print(f"    [NocoDB Sync Warning] Failed to post {r['channel_name']}: {post_err}")
+
+    send_discord_log(
+        f"✅ {user_ping} **Sent Outreach Synced to Naz NocoDB!**\n"
+        f"Successfully pushed **{synced_count}/{len(rows)}** creator(s) to `{table_name}`."
+    )
+    print(f"  [NocoDB Sync Complete] Synced {synced_count}/{len(rows)} sent outreach records to NocoDB.")
+    return {"success": True, "total": len(rows), "synced": synced_count}
 
 
 def get_cron_schedule_config() -> tuple[str, int]:
