@@ -439,16 +439,47 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
         return {"success": True, "total": 0, "synced": 0}
 
     _, user_ping = get_discord_config()
+
+    # Query already synced channel_ids to avoid duplicates
+    existing_cids = set()
+    try:
+        get_req = urllib.request.Request(
+            f"{nocodb_url}/api/v2/tables/{table_name}/records?fields=channel_id&limit=1000",
+            headers={
+                "xc-token": api_token,
+                "Authorization": f"Bearer {api_token}",
+            },
+            method="GET",
+        )
+        with urllib.request.urlopen(get_req, timeout=10) as get_resp:
+            if get_resp.status == 200:
+                body = json.loads(get_resp.read().decode("utf-8"))
+                for item in body.get("list", []):
+                    if item.get("channel_id"):
+                        existing_cids.add(item["channel_id"])
+    except Exception as fetch_err:
+        print(f"  [NocoDB Sync Warning] Could not fetch existing channel_ids: {fetch_err}")
+
+    pending_rows = [r for r in rows if r["channel_id"] not in existing_cids]
+
+    if not pending_rows:
+        send_discord_log(
+            f"ℹ️ {user_ping} **Syncing sent outreach to Naz NocoDB:**\n"
+            f"All **{len(rows)}** sent creator(s) are already up to date in `{table_name}`."
+        )
+        print(f"  [NocoDB Sync Complete] All {len(rows)} sent records already present in NocoDB.")
+        return {"success": True, "total": len(rows), "synced": 0}
+
     send_discord_log(
         f"🔄 {user_ping} **Syncing sent outreach to Naz NocoDB...**\n"
-        f"Found **{len(rows)}** sent creator(s). Syncing to table `{table_name}`."
+        f"Found **{len(pending_rows)}** new sent creator(s) to sync (out of {len(rows)} total). Syncing to `{table_name}`."
     )
 
     endpoint = f"{nocodb_url}/api/v2/tables/{table_name}/records"
     synced_count = 0
     import re
 
-    for r in rows:
+    for r in pending_rows:
         subject = ""
         if r.get("subject_lines"):
             sl = r["subject_lines"]
@@ -461,23 +492,25 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
             if m:
                 subject = m.group(1).strip()
 
+        channel_id = r["channel_id"]
+        channel_name = r.get("channel_name") or "Unknown Creator"
+        channel_link = f"https://youtube.com/channel/{channel_id}" if channel_id else ""
+
         record_data = {
-            "Channel ID": r["channel_id"],
-            "Channel Name": r["channel_name"],
-            "Channel Handle": r.get("channel_handle") or "",
-            "Email": r["email_address"],
-            "Video ID": r.get("video_id") or "",
-            "Video Title": r.get("video_title") or "",
-            "Subject": subject,
-            "Sent At": str(r.get("outreach_sent_at") or ""),
-            "Subscribers": r.get("subscriber_count") or 0,
-            "Avg Views": r.get("avg_views") or 0,
-            "Engagement Rate": float(r.get("avg_engagement_rate") or 0),
-            "channel_id": r["channel_id"],
-            "channel_name": r["channel_name"],
-            "email": r["email_address"],
+            "Title": channel_name,
+            "channel_name": channel_name,
+            "channel_id": channel_id,
+            "channel_handle": r.get("channel_handle") or "",
+            "channel_link": channel_link,
+            "email": r.get("email_address") or "",
+            "video_id": r.get("video_id") or "",
+            "video_title": r.get("video_title") or "",
             "subject": subject,
             "sent_at": str(r.get("outreach_sent_at") or ""),
+            "subscriber": str(r.get("subscriber_count") or "") if r.get("subscriber_count") else "",
+            "avg_views": str(r.get("avg_views") or "") if r.get("avg_views") else "",
+            "engagement_rate": str(r.get("avg_engagement_rate") or "") if r.get("avg_engagement_rate") else "",
+            "notes": "",
         }
 
         try:
@@ -488,6 +521,7 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
                 headers={
                     "Content-Type": "application/json",
                     "xc-token": api_token,
+                    "Authorization": f"Bearer {api_token}",
                 },
                 method="POST",
             )
@@ -499,9 +533,9 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
 
     send_discord_log(
         f"✅ {user_ping} **Sent Outreach Synced to Naz NocoDB!**\n"
-        f"Successfully pushed **{synced_count}/{len(rows)}** creator(s) to `{table_name}`."
+        f"Successfully pushed **{synced_count}/{len(pending_rows)}** new creator(s) to `{table_name}`."
     )
-    print(f"  [NocoDB Sync Complete] Synced {synced_count}/{len(rows)} sent outreach records to NocoDB.")
+    print(f"  [NocoDB Sync Complete] Synced {synced_count}/{len(pending_rows)} new sent outreach records to NocoDB.")
     return {"success": True, "total": len(rows), "synced": synced_count}
 
 
