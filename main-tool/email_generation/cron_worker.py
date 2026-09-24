@@ -416,7 +416,7 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
                     e.video_id,
                     v.title AS video_title,
                     e.outreach_email,
-                    e.final_email,
+                    e.outreach_draft,
                     e.subject_lines,
                     e.outreach_sent_at,
                     c.subscriber_count,
@@ -487,8 +487,8 @@ def sync_sent_outreach_to_nocodb() -> dict[str, Any]:
                 subject = sl[0]
             elif isinstance(sl, dict):
                 subject = sl.get("primary") or next(iter(sl.values()), "")
-        if not subject and (r.get("final_email") or r.get("outreach_email")):
-            m = re.search(r"^Subject:\s*(.+)$", r.get("final_email") or r.get("outreach_email") or "", re.M)
+        if not subject and (r.get("outreach_email") or r.get("outreach_draft")):
+            m = re.search(r"^Subject:\s*(.+)$", r.get("outreach_email") or r.get("outreach_draft") or "", re.M)
             if m:
                 subject = m.group(1).strip()
 
