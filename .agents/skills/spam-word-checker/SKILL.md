@@ -6,8 +6,8 @@ description: >
   copy. Trigger on phrases like "check this for spam", "spam word check", "deliverability review",
   "QA this copy", "flag banned words", "check subject line", "is this safe to send", "scan for
   spam triggers", or any time cold email copy is being generated or reviewed. Also trigger
-  automatically as a background rule whenever the campaign-copywriting or cold-email-copywriting
-  skill is active -- these guardrails apply to EVERY piece of outbound copy generated, even if
+  automatically as a background rule whenever cold-outreach or outbound copy
+  is active -- these guardrails apply to EVERY piece of outbound copy generated, even if
   the user does not explicitly ask for a check.
 ---
 

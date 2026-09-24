@@ -42,7 +42,7 @@ Return:
   * **What happens in this clip (Viewer Context)**: 1–2 plain, factual sentences explaining what the creator actually demonstrates or says at that moment. This gives Safwan instant context so he knows what the hook means without having to watch the full video.
 - A one-line recommendation on which hook to lead with and why.
 
-Then, hand off to `safwan-voice` (and `cold-email` / `spam-word-checker` for structure/deliverability) to draft the email.
+Then, hand off to `safwan-voice` (and `cold-outreach` / `spam-word-checker` for structure/deliverability) to draft the email.
 
 ## Evaluating output
 

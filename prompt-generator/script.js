@@ -52,9 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 2. Confirm actual audience/niche overlap between ${brandName} and ${creatorName} using the creator's real stats (subscribers, recent views) — don't assert "great fit" without checking.
 
-3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not the stripped cold-email formula.
+3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not a stripped generic outreach formula.
 
-4. Structure it with cold-outreach / cold-email's framework: humanized, one ask, one CTA.
+4. Structure it with cold-outreach's framework: humanized, one ask, one CTA.
 
 5. Anonymize the creator per the standing rule — describe by niche + stats, not name or channel link, since this is a brand pitch pre-contract.
 
@@ -76,9 +76,9 @@ If a link doesn't yield a real, usable detail, say so — don't invent a quote, 
 
 2. Review the creator's actual stats (subscribers, recent views) to ensure they fit our agency's criteria.
 
-3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not the stripped cold-email formula.
+3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not a stripped generic outreach formula.
 
-4. Structure it with cold-outreach / cold-email's framework: humanized, one ask, one CTA.
+4. Structure it with cold-outreach's framework: humanized, one ask, one CTA.
 
 5. Run it through spam-word-checker before presenting — flag and fix anything that would hurt deliverability.
 

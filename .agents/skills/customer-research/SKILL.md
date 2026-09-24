@@ -299,7 +299,7 @@ Don't ask all five at once — lead with #1 and #2, then follow up as needed.
 | Building a competitor comparison page | `competitors` |
 | Creating a churn prevention strategy from churn research | `churn-prevention` |
 | Planning paid ads informed by research | `ads` |
-| Writing cold email using research on pain/trigger | `cold-email` |
+| Writing cold email using research on pain/trigger | `cold-outreach` |
 | Translating customer research into an ICP for outbound | `prospecting` |
 | Planning content based on discovered topics | `content-strategy` |
 | Rolling research into a comprehensive marketing plan | `marketing-plan` |

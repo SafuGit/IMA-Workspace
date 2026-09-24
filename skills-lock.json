@@ -13,12 +13,6 @@
       "skillPath": "skills/ai-seo/SKILL.md",
       "computedHash": "30307bebed9bd2ad24bc497526491ab00db5d61746498c39bf79d6b1e376d100"
     },
-    "cold-email": {
-      "source": "coreyhaines31/marketingskills",
-      "sourceType": "github",
-      "skillPath": "skills/cold-email/SKILL.md",
-      "computedHash": "a92d0fc0d4740d751716d0fa123851deecc12d56d6f30515ffc051f312362503"
-    },
     "cold-outreach": {
       "source": "outreachgpt",
       "sourceType": "local",

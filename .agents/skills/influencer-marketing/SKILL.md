@@ -58,7 +58,7 @@ For most brands, a portfolio of **micro + nano** partners out-converts one macro
 
 ## 2. Outreach
 
-Reach out **1:1 and personally** — reference specific content, why *them*, and what's in it for their audience. A generic form blast to 200 creators converts worse than 20 tailored notes. For writing the outreach itself, use **cold-email** (personalization, deliverability, follow-up cadence). Lead with the offer and the fit; don't bury the ask.
+Reach out **1:1 and personally** — reference specific content, why *them*, and what's in it for their audience. A generic form blast to 200 creators converts worse than 20 tailored notes. For writing the outreach itself, use **cold-outreach** (personalization, deliverability, follow-up cadence). Lead with the offer and the fit; don't bury the ask.
 
 ## 3. Structuring the Deal
 
@@ -193,7 +193,7 @@ Dedicated creator-discovery/CRM platforms (e.g., Modash, GRIN, Aspire, Upfluence
 - **referrals** — affiliate/commission tracking and payout rails (the performance side of creator deals)
 - **community-marketing** — community-led advocacy and the unpaid advocate program
 - **ad-creative** — repurpose creator content into paid ads (whitelisting); creative review page for sign-off
-- **cold-email** — the creator outreach itself (personalization, deliverability, follow-up)
+- **cold-outreach** — the creator outreach itself (personalization, deliverability, follow-up)
 - **customer-research** — find existing advocates and ground the talking points
 - **ai-seo** — the branded-search/direct attribution blind spot that hides influencer impact
 - **social** — organic content strategy the partnerships plug into
