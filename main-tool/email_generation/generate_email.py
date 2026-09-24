@@ -565,6 +565,25 @@ def generate_email_pipeline(
     video_id = result.get("video_id", "")
     parsed = parse_generated_output(raw_output, video_id=video_id)
 
+    transcript = result.get("transcript")
+    comments = result.get("comments") or []
+    description = result.get("description") or ""
+
+    # Persist transcript record to DB if not already saved
+    try:
+        from email_generation.db import save_transcript_record
+        save_transcript_record(
+            video_id=video_id,
+            channel_id=result.get("channel_id") or None,
+            title=result.get("title") or None,
+            description=description or None,
+            transcript=transcript or None,
+            comments=comments or None,
+            source=result.get("source") or None,
+        )
+    except Exception as db_err:
+        print(f"[DB Warning] Could not persist transcript record: {db_err}")
+
     return {
         "success": True,
         "video_id": video_id,
@@ -572,6 +591,9 @@ def generate_email_pipeline(
         "channel_id": result.get("channel_id", ""),
         "channel_name": result.get("channel_name", ""),
         "mode": mode,
+        "transcript": transcript,
+        "comments": comments,
+        "description": description,
         "hooks": parsed["hooks"],
         "recommendation": parsed.get("recommendation", ""),
         "subject_lines": parsed["subject_lines"],
@@ -579,11 +601,15 @@ def generate_email_pipeline(
         "raw_output": raw_output,
         "video_data": {
             "title": result.get("title", ""),
+            "description": description,
             "channel_title": result.get("channel_name", ""),
             "view_count": result.get("view_count", 0),
             "comment_count": result.get("comment_count", 0),
             "thumbnail_url": result.get("thumbnail_url", ""),
-            "has_captions": bool(result.get("transcript")),
+            "has_captions": bool(transcript),
+            "transcript": transcript,
+            "comments": comments,
+            "source": result.get("source", "none"),
         },
     }
 

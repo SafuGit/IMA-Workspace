@@ -47,22 +47,35 @@ from wrappers.youtube_api import (
     _download_audio,
 )
 from wrappers.transcription import _transcribe_local
+from email_generation.db import get_cached_transcript, save_transcript_record
+import re
+
+
+def extract_video_id(url_or_id: str) -> str:
+    """Extract YouTube 11-char video ID from URL or return raw ID."""
+    if len(url_or_id) == 11 and re.match(r"^[0-9A-Za-z_-]{11}$", url_or_id):
+        return url_or_id
+    m = re.search(r"(?:v=|\/|youtu\.be\/)([0-9A-Za-z_-]{11})", url_or_id)
+    return m.group(1) if m else url_or_id
 
 
 # ── Public return type ───────────────────────────────────────────────────────
 
-def get_video_data(url: str) -> dict:
+def get_video_data(url: str, force_refresh: bool = False) -> dict:
     """
-    Run the full YouTube data pipeline for a given URL.
+    Run the full YouTube data pipeline for a given URL with DB caching.
 
     Steps:
-      1. Fetch title, description, and top comments via YouTube Data API.
+      0. Check PostgreSQL `transcripts` table for cached transcript, comments & metadata.
+      1. If not cached, fetch title, description, and top comments via YouTube Data API.
       2. Attempt to download captions via yt-dlp (free, no quota).
       3. If captions unavailable, download audio and transcribe locally
          using faster-whisper (tiny.en, int8, CPU).
+      4. Persist the fetched transcript, comments, and metadata to `transcripts` table.
 
     Args:
         url: Full YouTube URL or 11-character video ID.
+        force_refresh: If True, bypasses database cache and re-scrapes.
 
     Returns:
         {
@@ -71,9 +84,19 @@ def get_video_data(url: str) -> dict:
             "description": str,
             "comments":    list[dict],   # [{text, author, likes, published_at}]
             "transcript":  str | None,   # None only if all methods fail
-            "source":      "captions" | "local_transcription" | "none",
+            "source":      "captions" | "local_transcription" | "none" | "database_cache",
         }
     """
+    vid = extract_video_id(url)
+
+    # ── Step 0: Check database cache ──────────────────────────────────────────
+    if not force_refresh:
+        cached = get_cached_transcript(vid)
+        if cached and cached.get("transcript"):
+            word_count = len(cached["transcript"].split())
+            comment_count = len(cached.get("comments") or [])
+            print(f"[DB Cache] ✅ Found stored transcript ({word_count} words) & {comment_count} comments in `transcripts` table for {vid}")
+            return cached
 
     # ── Step 1: YouTube Data API ─────────────────────────────────────────────
     print(f"[1/3] Fetching video details …")
@@ -113,7 +136,7 @@ def get_video_data(url: str) -> dict:
             print(f"      ❌ Transcription failed: {e}")
             transcript = None
 
-    return {
+    result = {
         "video_id":    video_id,
         "title":       title,
         "description": description,
@@ -121,6 +144,19 @@ def get_video_data(url: str) -> dict:
         "transcript":  transcript,
         "source":      source,
     }
+
+    # ── Step 4: Save to PostgreSQL transcripts table ─────────────────────────
+    if transcript:
+        save_transcript_record(
+            video_id=video_id,
+            title=title,
+            description=description,
+            transcript=transcript,
+            comments=comments,
+            source=source,
+        )
+
+    return result
 
 
 # ── CLI entrypoint ───────────────────────────────────────────────────────────

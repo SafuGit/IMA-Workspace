@@ -331,10 +331,22 @@ def run_cron_batch(batch_size: int = 20, dry_run: bool = False, target_channel_i
 
             transcript = pipeline_res.get("transcript") or ""
 
-            # Standard outreach contact placeholder or handle
-            email_address = f"contact@{c.get('channel_handle') or channel_id}.com"
+            # 2. Save full transcript, comments, and description to transcripts table
+            try:
+                from email_generation.db import save_transcript_record
+                save_transcript_record(
+                    video_id=video_id,
+                    channel_id=channel_id,
+                    title=pipeline_res.get("title") or video_title,
+                    description=pipeline_res.get("description"),
+                    transcript=transcript,
+                    comments=pipeline_res.get("comments"),
+                    source=pipeline_res.get("source"),
+                )
+            except Exception as tr_err:
+                print(f"    [DB Warning] Failed to save to transcripts table: {tr_err}")
 
-            # 2. Save to influencer_emails with structured columns
+            # 3. Save to influencer_emails with structured columns
             save_generated_email(
                 channel_id=channel_id,
                 video_id=video_id,
