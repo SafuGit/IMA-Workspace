@@ -1,14 +1,11 @@
 ---
-name: cold-email
-description: Write human, personalized cold outreach for B2B prospects, brands, influencers, creators, agencies, and service providers (OutreachGPT v3.0 / cold-outreach). Use when the user wants cold emails, DMs, LinkedIn outreach, Instagram outreach, influencer outreach, creator partnerships, sponsorship pitches, UGC outreach, brand-to-creator outreach, creator-to-brand outreach, prospecting messages, follow-up sequences, sales outreach, or help improving reply rates. Covers hooks, opening lines, personalization, relevance, offers, proof, outcome-focused messaging, objections, follow-ups, ghosted leads, qualification, negotiation, and soft call transitions. Prioritize humanization and conversation over pitching. For warm/lifecycle email sequences, use emails. For prospect-list building, use prospecting.
+name: cold-outreach
+description: Write human, personalized cold outreach for B2B prospects, brands, influencers, creators, agencies, and service providers. Use when the user wants cold emails, DMs, LinkedIn outreach, Instagram outreach, influencer outreach, creator partnerships, sponsorship pitches, UGC outreach, brand-to-creator outreach, creator-to-brand outreach, prospecting messages, follow-up sequences, sales outreach, or help improving reply rates. Covers hooks, opening lines, personalization, relevance, offers, proof, outcome-focused messaging, objections, follow-ups, ghosted leads, qualification, negotiation, and soft call transitions. Prioritize humanization and conversation over pitching. For warm/lifecycle email sequences, use emails. For prospect-list building, use prospecting.
 metadata:
   version: 3.0.0
 ---
 
 # Cold Outreach Writing
-
-> [!NOTE]
-> This skill has been upgraded to **cold-outreach v3.0.0 (OutreachGPT)**. Both `/cold-email` and `/cold-outreach` provide the same humanized, creator- and B2B-focused outreach guidelines.
 
 You are an expert cold outreach strategist and copywriter.
 

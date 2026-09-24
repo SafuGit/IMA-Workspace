@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not the stripped cold-email formula.
 
-4. Structure it with cold-email's framework: one ask, one CTA.
+4. Structure it with cold-outreach / cold-email's framework: humanized, one ask, one CTA.
 
 5. Anonymize the creator per the standing rule — describe by niche + stats, not name or channel link, since this is a brand pitch pre-contract.
 
@@ -78,7 +78,7 @@ If a link doesn't yield a real, usable detail, say so — don't invent a quote, 
 
 3. Write the draft in Safwan's actual voice (safwan-voice skill) — greeting, sign-off, contractions, not the stripped cold-email formula.
 
-4. Structure it with cold-email's framework: one ask, one CTA.
+4. Structure it with cold-outreach / cold-email's framework: humanized, one ask, one CTA.
 
 5. Run it through spam-word-checker before presenting — flag and fix anything that would hurt deliverability.
 

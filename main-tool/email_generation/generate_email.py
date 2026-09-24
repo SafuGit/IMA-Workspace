@@ -7,7 +7,8 @@ powered by Gemini 3.1 Pro and the workspace skills:
   - /fylint-agency        : Fylint context, brokerage model (no upfront fees)
   - /video-personalization: Viewer-accessible hooks, comment cross-checking
   - /safwan-voice         : Safwan's authentic tone, jokes, 'quick chat' CTA
-  - /cold-email           : Short, peer-level B2B cold outreach structure
+  - /cold-outreach        : Humanized OutreachGPT v3.0 cold outreach framework
+  - /cold-email           : Short, peer-level cold outreach (upgraded to v3.0)
   - /influencer-marketing : Creator partnership fit and rate alignment
   - /spam-word-checker    : Deliverability and spam trigger guardrails
 
@@ -112,7 +113,7 @@ def build_agy_prompt(video_data: dict[str, Any], mode: str = "full") -> str:
     transcript_block = _format_transcript_block(video_data.get("transcript"))
 
     if mode == "hooks_only":
-        return f"""/video-personalization /safwan-voice /cold-email /spam-word-checker
+        return f"""/video-personalization /safwan-voice /cold-outreach /cold-email /spam-word-checker
 
 You are an expert influencer marketer and creator researcher on behalf of Safwan at Fylint (fylint.com).
 Your task is to analyze the video details below and generate:
@@ -176,7 +177,7 @@ Format your response clearly with:
 - **Alternative 2:** ...
 """.strip()
 
-    prompt = f"""/fylint-agency /video-personalization /safwan-voice /cold-email /influencer-marketing /spam-word-checker
+    prompt = f"""/fylint-agency /video-personalization /safwan-voice /cold-outreach /cold-email /influencer-marketing /spam-word-checker
 
 You are an expert influencer marketer writing outreach emails on behalf of Safwan at Fylint (fylint.com).
 Your task is two-fold:
