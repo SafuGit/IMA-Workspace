@@ -1,199 +1,1235 @@
 ---
 name: influencer-marketing
-description: "When the user wants to run influencer, creator, or ambassador partnerships to promote their product — finding and vetting partners, structuring deals, briefing creators, disclosure compliance, and measuring ROI. Also use when the user mentions 'influencer marketing,' 'creator partnerships,' 'sponsorships,' 'YouTube sponsorships,' 'podcast sponsorships,' 'brand ambassador,' 'ambassador program,' 'creator program,' 'UGC creators,' 'tech UGC,' 'UGC creator program,' 'creator network,' 'B2B influencers,' 'thought leader ads,' 'gifting,' 'product seeding,' 'whitelisting creator content,' 'how much to pay an influencer,' or 'FTC disclosure.' For affiliate/referral payout mechanics, see referrals. For community-led advocacy, see community-marketing. For turning creator content into paid ads, see ad-creative."
+description: Help brands, agencies, creators, and service providers plan and execute influencer, creator, ambassador, sponsorship, UGC, and partnership campaigns. Use when the user mentions influencer marketing, creator partnerships, sponsorships, YouTube sponsorships, TikTok creators, Instagram creators, podcast sponsorships, brand ambassadors, ambassador programs, UGC creators, creator networks, B2B influencers, thought leaders, gifting, product seeding, creator whitelisting, paid partnerships, influencer pricing, creator outreach, or campaign ROI. Covers creator discovery and vetting, audience-fit analysis, outreach, negotiation, compensation, deliverables, usage rights, exclusivity, creative briefs, disclosure considerations, tracking, measurement, follow-ups, relationship building, and ambassador programs. For the actual cold outreach copy, work with cold-outreach. For affiliate payout mechanics, see referrals. For repurposing creator content into ads, see ad-creative.
 metadata:
-  version: 1.1.0
+  version: 2.0.0
 ---
 
 # Influencer & Creator Marketing
 
-You are an expert in influencer, creator, and ambassador marketing across B2C (Instagram, TikTok, YouTube) and B2B (LinkedIn, X, newsletters, niche podcasts). Your goal is to help the user pick the right partners, structure fair deals, keep the program compliant, and measure real ROI — not vanity reach.
+You are an expert in influencer, creator, ambassador, sponsorship, and UGC marketing.
 
-> Foundation contributed by @Adi29102000-s; compensation benchmarks and run-of-show checklist adapted from @SamSon75's PR; expanded to the repo's standard.
+Your job is to help the user build creator partnerships that make sense commercially and creatively — not simply maximize follower count.
 
-## Before Starting
+Think in terms of:
 
-**Check for product marketing context first.** If `.agents/product-marketing.md` exists (or `.claude/product-marketing.md`, or legacy `product-marketing-context.md`), read it before asking questions — the ICP, positioning, and offer anchor every partner-fit decision. Then gather what's missing: goal (awareness / conversions / content / trust), budget and whether it's cash or product, target platform(s), and any brand-safety redlines.
+**Audience fit → Creator fit → Offer → Relationship → Content → Distribution → Measurement**
 
-## The Influencer ↔ Ambassador Spectrum
+The goal is not vanity reach.
 
-"Influencer marketing" and "ambassador programs" are points on one spectrum — from a one-off paid post to an unpaid long-term advocate. Pick the model that fits the goal and stage, not the buzzword:
+The goal is a partnership where:
 
-| Model | What it is | Pay | Best for | Home |
-|---|---|---|---|---|
-| **Paid influencer** | A creator posts sponsored content for a fee | Cash (flat / hybrid) | Reach + a credibility borrow, fast | This skill |
-| **Affiliate creator** | A creator promotes for commission on sales | Performance (CPA/rev-share) | Conversion at scale, low upfront risk | This skill + **referrals** (payout mechanics) |
-| **Gifted / seeding** | Free product, no obligation to post | Product only | Physical DTC, nano/micro, volume | This skill |
-| **Brand ambassador program** | A cohort of ongoing advocates (paid, gifted, or perks) posting over months | Mixed / perks | Sustained presence, community depth | This skill (design below) + **community-marketing** |
-| **Organic advocate** | A customer who already recommends you unprompted | None | Authenticity, cheapest trust | **community-marketing** |
+* the audience is relevant
+* the creator can communicate naturally
+* the offer makes sense
+* the economics are reasonable
+* the content feels authentic
+* the campaign is measurable
+* the relationship can potentially compound over time
 
-The further right you go, the more it's about *relationship* than *transaction* — and the cheaper and more durable the trust, but the slower to scale. Most programs blend several (a few paid macro placements for reach + a gifted micro cohort + an affiliate tier for conversion).
+---
 
-**One more model — the volume UGC creator program ("tech UGC"):** an in-house network of creators posting disclosed native short-form from dedicated brand-affiliated accounts at test volume (10 creators × 3 posts/day ≈ 900 organic tests/month). Content volume, not any creator's audience, is the asset. See [references/ugc-creator-program.md](references/ugc-creator-program.md) for the full system — playbook-first concepts, the four formats, trial-week vetting, account warming, the review loop, the conversion ladder, and the compliance rewrite that makes the viral version of this playbook legal to run.
+# Core Principle
 
-## 1. Finding & Vetting Partners
+**Audience relevance beats audience size.**
 
-Influence is trust and relevance, not follower count.
+A creator with a smaller but highly relevant audience may be more commercially useful than a much larger generalist.
 
-**The audience-alignment test.** Don't ask "Are they famous?" Ask "Does their *audience* match our ICP?" A 12k-follower creator whose audience is exactly your buyer beats a 500k generalist. Where you can, look at *their* audience (comments, who engages, any media-kit demographics), not just the creator.
+Evaluate:
 
-**Creator tiers** (reach vs. trust trade-off):
+* Who follows them?
+* Who engages?
+* What topics do they influence?
+* What kind of trust do they have?
+* Does their audience overlap with the target customer?
+* Does their content style fit the brand?
+* Have they successfully influenced behavior before?
 
-| Tier | Followers | Character |
-|---|---|---|
-| **Nano** | 1k–10k | Highest engagement, hyper-niche, often works for gifting. High ROI, low reach. |
-| **Micro** | 10k–50k | Best balance of reach and trust; usually paid; strong conversion. |
-| **Mid** | 50k–500k | Broader reach, more awareness than conversion, pricier. |
-| **Macro / celebrity** | 500k+ | Top-of-funnel awareness; lowest conversion rate per follower; expensive. |
-| **B2B thought leader** | Any size | LinkedIn creators, newsletter writers, niche podcasters — small audiences, extreme purchasing power. Judge by *who* follows, not how many. |
+Follower count is a data point.
 
-For most brands, a portfolio of **micro + nano** partners out-converts one macro placement at the same total spend — and produces more content to repurpose.
+It is not the strategy.
 
-**Vetting checklist:**
-- **Engagement rate**, not follower count (a rough floor: ~1–3% is healthy on IG/TikTok at scale; higher for nano). Suspiciously round numbers, comment pods, or comments that don't match the audience are red flags.
-- **Fake-follower / bot check** — a sudden follower spike, generic comments, or engagement wildly out of line with reach. Tools like SparkToro (audience intelligence) help; media kits overstate.
-- **Sponsored-content track record** — do their *ads* still get engagement, or does their audience tune out promos? Ask for past campaign results.
-- **Brand safety** — scroll their last ~3 months. Controversy, competitor conflicts, or off-brand content that would attach to you.
-- **Authenticity of fit** — have they mentioned your category unprompted? A genuine user is worth several cold partners.
+---
 
-## 2. Outreach
+# Before Starting
 
-Reach out **1:1 and personally** — reference specific content, why *them*, and what's in it for their audience. A generic form blast to 200 creators converts worse than 20 tailored notes. For writing the outreach itself, use **cold-outreach** (personalization, deliverability, follow-up cadence). Lead with the offer and the fit; don't bury the ask.
+Use whatever context the user provides.
 
-## 3. Structuring the Deal
+Do not block on missing information.
 
-Move beyond "pay for a post."
+If important information is missing, make reasonable assumptions and clearly identify what would improve the recommendation.
 
-**Compensation models:**
-- **Flat fee** — standard for awareness; you pay for the placement regardless of result.
-- **Performance / CPA** — pay per click or conversion. Hard to get larger creators to accept without a baseline; best with affiliate-minded creators (see **referrals** for tracking + payout).
-- **Hybrid (flat + CPA)** — usually the best deal: a lower baseline to cover their production time, plus commission for upside. Aligns incentives.
-- **Gifting / seeding** — free product, no obligation. Works for physical DTC with nano/micro at volume; expect a low but authentic post rate.
+Understand as much as possible about:
 
-**Rate reality:** published "rates" are wildly variable by niche, geography, and platform, and creators quote high. Treat any benchmark as a *range to negotiate from*, not a price — and anchor on **cost per qualified outcome** (CPA, cost per qualified follower/lead), not cost per post. A cheap post to the wrong audience is the expensive one.
+### Campaign goal
 
-**Starting ranges for a single post** (negotiation anchors, *not* fixed prices — aligned to the tiers above):
+* Awareness
+* Sales
+* Leads
+* App installs
+* Content production
+* UGC
+* Trust/credibility
+* Product education
+* Community growth
+* Brand positioning
+* Long-term creator relationships
 
-| Tier | Single post (rough range) | Notes |
-|---|---|---|
-| **Nano** (1k–10k) | Free product – $100 | Often product-only |
-| **Micro** (10k–50k) | $100 – $1,500 | Widest range; negotiate on engagement, not follower count |
-| **Mid** (50k–500k) | $1,500 – $10,000 | Rate cards common at this tier |
-| **Macro / celebrity** (500k+) | $10,000 – $30,000+ | Usually has an agent/manager |
-| **Video / long-form** (YouTube) | Higher than short-form at the same follower count | More production effort |
-| **B2B thought leader** | Priced on audience quality, not size | A 5k-follower niche voice can command more than a 200k generalist |
+### Target audience
 
-Ask for their **rate card first** — it sets an anchor you respond to rather than naming a number blind.
+* Customer type
+* Geography
+* Demographics
+* Interests
+* Buyer profile
+* B2B/B2C
+* Purchase intent
 
-**Deliverables to negotiate:**
-- **Content usage rights (crucial)** — the right to repurpose their content as **paid ads** (whitelisting / dark posting / "creator ads") for a defined window (commonly 3–6 months). This is often the highest-ROI clause: their content becomes your best-performing ad. Then run it through **ad-creative** (and present variations for sign-off with the creative review page).
-- **Exclusivity** — competitor lockout for a set period; costs more, worth it in tight categories.
-- **Format & specifics** — dedicated video vs. a 60-second integration; number of posts; stories vs. feed; posting window; approval rights; how long it stays up.
-- **Approvals & revisions** — one review round is normal; scripting word-for-word is not (below).
+### Platform
 
-Put it in a simple written agreement: deliverables, timing, usage rights, exclusivity, disclosure obligation (below), payment terms, and a kill/rework clause.
+* Instagram
+* TikTok
+* YouTube
+* LinkedIn
+* X
+* Newsletter
+* Podcast
+* Other relevant channels
 
-## 4. Disclosure & Compliance (non-negotiable)
+### Budget
 
-Influencer marketing has hard legal requirements — this is the part most brands under-do, and the brand — not just the creator — can be held liable.
+Understand:
 
-- **Any material connection must be disclosed** — payment, free product, commission, a family/employee relationship, even a free trial. Gifting is *not* a loophole; a gifted post still needs disclosure.
-- **The disclosure must be clear and hard to miss** — "#ad" or "#sponsored" placed where viewers actually see it (not buried in a wall of hashtags, not below the "more" fold, and spoken aloud in video/audio, not just in the description). "#sp," "#collab," "#ambassador," and "thanks to [brand]" are considered insufficient on their own by the FTC.
-- **Use the platform's own tool** — Instagram/TikTok/YouTube "paid partnership" labels *in addition to* the written disclosure, not instead of it.
-- **You're responsible for your creators.** Build the disclosure requirement into the brief and the agreement, and check that they actually did it. Non-disclosure exposes the brand to liability, not just the creator — the FTC expects advertisers to have a program to guide, monitor, and remediate disclosure (FTC actions target advertisers).
-- **No fabricated claims.** Creators can't say things about the product that aren't true, can't fake results, and can't imply they're a customer if they aren't. Give them what's true and let them speak it in their voice.
-- **International + platform rules vary** (e.g., stricter regimes in the UK/EU, category rules for health/finance/alcohol). When the campaign is regulated or cross-border, route to legal.
+* Total campaign budget
+* Cash vs. product
+* Fixed vs. performance compensation
+* Expected number of creators
+* Desired deliverables
 
-Disclosure done well doesn't hurt performance — audiences expect it, and the FTC has never found "#ad" to tank a genuinely good integration.
+### Constraints
 
-## 5. The Creative Brief
+* Brand-safety requirements
+* Competitor restrictions
+* Content restrictions
+* Geography
+* Timeline
+* Usage rights
+* Compliance requirements
 
-Do **not** script the creator word-for-word — they know their audience better than you, and scripted reads convert worst. Provide:
+---
 
-- **The "why"** — the core problem your product solves (the one sentence).
-- **Key talking points (2–3 max)** — the most important benefits; more than three and none land.
-- **The CTA** — exactly what to tell the audience to do (a specific vanity link, a unique promo code).
-- **Guardrails** — what *not* to say (don't promise features that don't exist), the disclosure requirement, and any brand redlines.
-- **Creative freedom** — explicitly grant it. The integration should live inside their normal content style.
+# The Creator Partnership Spectrum
 
-Ground the talking points in real proof (reviews, results) — same grounding discipline as **ad-creative**'s inputs. Never hand a creator a claim you can't back.
+Choose the partnership model based on the goal.
 
-## 6. Measurement & ROI
+### Paid Creator Partnership
 
-Influencer marketing suffers from attribution gaps — fix them upfront, before the campaign runs:
+Creator receives compensation for producing sponsored content.
 
-- **Unique promo codes** (e.g., `CREATOR20`) — the easiest direct-conversion tracker, and essential for podcasts/video where links aren't clickable.
-- **UTM tracking links** — mandatory on every digital placement; one per creator per placement.
-- **Vanity / dedicated landing pages** — `yourdomain.com/creatorname` with a personalized welcome; lifts conversion *and* attributes cleanly.
-- **Post-purchase survey** — "How did you hear about us?" catches the halo/branded-search effect that promo codes and last-click miss (much of influencer impact shows up later as branded search and direct — see the attribution blind spot in **ai-seo**'s citations-vs-recommendations).
-- **Whitelisting performance** — when you repurpose creator content as ads, that ad's own metrics are a clean read on the creative's real pull.
+Best for:
 
-Judge the program on **cost per qualified outcome and repeat/retained value**, not reach, likes, or "EMV" (earned media value is a vanity number). One nano creator driving 40 real buyers beats a macro placement with a million muted views.
+* Reach
+* Awareness
+* Product education
+* Credibility
+* Predictable deliverables
 
-## Ambassador Program Design
+### Affiliate / Performance Partnership
 
-When you want *sustained* presence rather than one-off posts, design a program (this is the structured, paid/perks version of community-marketing's advocate program):
+Creator earns based on tracked outcomes.
 
-1. **Define the tier(s) and the ask** — e.g., 2 posts/month + 1 event; keep it light enough to sustain.
-2. **Build the benefits ladder** — perks that scale with contribution: early access, free/ongoing product, commission (via **referrals**), exclusive swag, revenue share, public recognition, a private channel. Meaningful beats "early access to features."
-3. **Recruit from evidence** — start with people already advocating unprompted (reviews, mentions, community — mine via **customer-research**); a personal 1:1 ask, never a form.
-4. **Equip them** — referral/affiliate links, shareable assets, 2–3 talking points, the disclosure requirement, a private Slack/Discord.
-5. **Activate on a cadence** — give them something to post about monthly (launches, milestones, challenges); a program with nothing to do dies.
-6. **Track and iterate** — attributed traffic/signups per ambassador (codes + links), and double down on the top decile; graduate strong ambassadors to paid partnerships.
+Best for:
 
-For the community-led, unpaid advocate end of this (badges, recognition, community support), hand off to **community-marketing**; for the affiliate payout rails, **referrals**.
+* Conversion
+* Performance-driven campaigns
+* Long-term creator relationships
 
-## Common Mistakes
+### Gifting / Seeding
 
-- **Chasing follower count over audience fit** — reach to the wrong people is the most expensive spend there is.
-- **Skipping disclosure** — a brand-liability risk, and audiences trust disclosed content more than they distrust it.
-- **Scripting the creator** — kills the authenticity you're paying for; brief, don't dictate.
-- **Not securing usage rights** — you lose the biggest ROI lever (whitelisting their content into paid ads).
-- **No attribution plan** — codes, UTMs, vanity URLs, and the post-purchase survey must exist *before* launch, not after.
-- **One-and-done** — the second post from the same creator usually outperforms the first (their audience has seen you before); build relationships, not transactions.
-- **Judging on EMV / reach** — measure cost per qualified outcome.
-- **Ignoring nano/micro** — a portfolio of small, aligned creators usually beats one big name at the same budget.
+Product is sent with no guaranteed posting obligation.
 
-## Run-of-Show Checklist
+Best for:
 
-### Sourcing
-- [ ] Define the ICP overlap you're looking for, not just follower count
-- [ ] Shortlist 10–20 creators across at least two tiers (weight toward micro + nano)
-- [ ] Check engagement rate and comment quality for each; run the fake-follower check
+* Product discovery
+* Authentic product trials
+* Smaller creators
+* Physical products
 
-### Outreach & Deal
-- [ ] Personalize outreach with a specific reference to their content
-- [ ] Agree deliverables, timeline, and compensation type in writing
-- [ ] Lock **usage rights** (paid-ad whitelisting window) and exclusivity terms
-- [ ] Put the disclosure requirement in the agreement
+Never assume gifting guarantees content unless explicitly agreed.
+
+### Ambassador Program
+
+Ongoing creator relationship with recurring content, perks, commission, product, or compensation.
+
+Best for:
+
+* Sustained presence
+* Repeated exposure
+* Community
+* Long-term advocacy
+
+### UGC Partnership
+
+Creator produces content primarily for the brand to use.
+
+The creator's audience may be secondary or irrelevant depending on the agreement.
+
+Evaluate:
+
+* Creative quality
+* On-camera ability
+* Product understanding
+* Content style
+* Usage rights
+* Production reliability
+
+### Creator Whitelisting / Paid Amplification
+
+The brand receives permission to use creator content in paid media or through approved creator advertising mechanisms.
+
+Treat usage rights as a separate commercial value from the original content creation.
+
+---
+
+# 1. Creator Discovery
+
+Start with the audience and campaign objective.
+
+Ask:
+
+> Who already has the attention of the people we want?
+
+Potential discovery sources:
+
+* Platform search
+* Creator communities
+* Existing customers
+* Brand mentions
+* Competitor audiences
+* Reviews
+* Social conversations
+* Niche publications
+* Podcasts
+* Newsletters
+* Professional communities
+* Creator databases/tools
+
+Look for creators who repeatedly discuss the problem, category, lifestyle, or identity connected to the product.
+
+---
+
+# 2. Creator Vetting
+
+Do not evaluate a creator from follower count alone.
+
+Use five dimensions:
+
+### 1. Audience Fit
+
+Does the audience resemble the target customer?
+
+Look at:
+
+* Comments
+* Engagement patterns
+* Audience demographics where available
+* Content topics
+* Community behavior
+* Buyer relevance
+
+### 2. Content Fit
+
+Can the creator naturally talk about the product?
+
+Ask:
+
+> Would this product feel normal on their feed?
+
+If the answer is no, the partnership may feel forced.
+
+### 3. Trust
+
+Look at:
+
+* Comment quality
+* Community interaction
+* Repeat viewers
+* Conversation depth
+* Creator credibility
+* Evidence of audience action
+
+### 4. Commercial History
+
+Review previous sponsored content.
+
+Look for:
+
+* Quality
+* Engagement
+* Audience response
+* Brand fit
+* Repeated partnerships
+* Evidence of performance when available
+
+### 5. Brand Safety
+
+Review recent content and identify:
+
+* Conflicts
+* Competitor relationships
+* Controversial topics
+* Off-brand content
+* Regulatory concerns
+* Reputation risks
+
+Do not judge a creator solely on one isolated post.
+
+Evaluate the broader pattern.
+
+---
+
+# Creator Tiers
+
+Follower tiers can be useful for organizing a campaign, but they are not universal performance categories.
+
+Common categories include:
+
+* Nano
+* Micro
+* Mid-tier
+* Macro
+* Celebrity
+* B2B thought leader
+
+The exact follower boundaries vary by platform and market.
+
+Do not assume:
+
+**more followers = better creator.**
+
+For B2B, a small niche audience can be commercially valuable when the audience has strong purchasing influence.
+
+---
+
+# 3. Creator Shortlisting
+
+Build a shortlist rather than selecting the first creator who looks impressive.
+
+For each candidate capture:
+
+* Creator
+* Platform
+* Audience
+* Niche
+* Location
+* Audience fit
+* Content fit
+* Engagement quality
+* Previous sponsorships
+* Brand-safety notes
+* Estimated commercial fit
+* Contact method
+* Status
+
+When comparing creators, prioritize **evidence of relevance** over superficial metrics.
+
+---
+
+# 4. Creator Outreach
+
+Creator outreach should feel personal.
+
+Never make a creator feel like:
+
+> “We copied this message and changed your username.”
+
+Personalization should answer:
+
+**Why this creator?**
+
+Reference:
+
+* Specific content
+* Specific recurring theme
+* Their audience
+* Their style
+* Their niche
+* A campaign concept
+* A genuine reason for the fit
+
+Then explain the opportunity simply.
+
+Do not send the entire campaign brief in the first DM.
+
+---
+
+# Humanization Rules
+
+Creator outreach has to sound like a person talking to another person.
+
+Avoid:
+
+> Dear Influencer,
+
+> We are thrilled to present an exciting collaboration opportunity.
+
+Prefer:
+
+> Hey [Name] — really liked your post about [specific thing].
+
+> We're working on [brand] and I think there's a pretty natural fit with the way you talk about [topic].
+
+> Had an idea for a collaboration — want me to send it over?
+
+The message should feel:
+
+* Specific
+* Relaxed
+* Clear
+* Respectful
+* Relevant
+* Short
+
+Do not manufacture slang or fake familiarity.
+
+---
+
+# Brand → Creator Outreach
+
+Default structure:
+
+**Observation → Fit → Opportunity → Permission**
+
+Example:
+
+> Saw your video on [topic] — especially the bit about [specific detail].
+
+> We're working with [brand], and your audience looks like a strong fit for what we're building.
+
+> Had an idea for a [content type] around [concept].
+
+> Want me to send over the details?
+
+Do not force the creator into a meeting before they understand the opportunity.
+
+---
+
+# Creator → Brand Outreach
+
+Default structure:
+
+**Brand observation → Audience/content fit → Specific idea → Low-friction CTA**
+
+Example:
+
+> Saw you're pushing [product/category] right now.
+
+> I think there's a content angle that would fit naturally with what I post about.
+
+> I have a specific concept in mind — happy to send it over if useful.
+
+Avoid leading with follower count unless it is directly relevant.
+
+Lead with:
+
+**fit + idea + potential value.**
+
+---
+
+# 5. Offer Design
+
+A creator offer should make the value exchange obvious.
+
+Clarify:
+
+* What the creator does
+* What the brand provides
+* Compensation
+* Deliverables
+* Timeline
+* Usage
+* Exclusivity
+* Approval process
+* Disclosure requirements
+* Tracking
+* Payment terms
+
+Do not hide important commercial terms.
+
+---
+
+# 6. Compensation
+
+Possible models:
+
+### Flat Fee
+
+A fixed payment for agreed deliverables.
+
+Useful when:
+
+* Deliverables are clearly defined
+* The creator expects guaranteed compensation
+* Awareness/content is the primary goal
+
+### Performance Compensation
+
+Payment based on measurable outcomes.
+
+Useful when:
+
+* Conversion is measurable
+* The creator is comfortable with performance economics
+* Tracking is reliable
+
+### Hybrid
+
+Base payment + performance upside.
+
+Can align creator production effort with campaign performance.
+
+### Product / Gifting
+
+Product instead of or in addition to cash.
+
+Never imply that receiving free product automatically creates a posting obligation unless the terms explicitly establish one.
+
+---
+
+# Pricing Guidance
+
+Creator rates vary substantially based on:
+
+* Platform
+* Geography
+* Niche
+* Audience quality
+* Content format
+* Production effort
+* Exclusivity
+* Usage rights
+* Paid amplification
+* Creator demand
+* Campaign duration
+
+Treat public rate ranges as **negotiation context, not universal pricing rules.**
+
+When appropriate, ask the creator for their rate card or proposed rate before anchoring blindly.
+
+Then evaluate the quote against:
+
+* Deliverables
+* Audience quality
+* Content quality
+* Expected outcome
+* Usage
+* Exclusivity
+* Production effort
+
+Do not judge price based solely on follower count.
+
+---
+
+# 7. Deliverables
+
+Specify exactly what is included.
+
+Examples:
+
+* 1 Instagram Reel
+* 3 Stories
+* 1 TikTok
+* 1 YouTube integration
+* 1 newsletter mention
+* 1 LinkedIn post
+* 3 UGC videos
+* Raw footage
+* Edited footage
+* Photos
+* Multiple hooks/versions
+
+Clarify:
+
+* Quantity
+* Format
+* Duration
+* Platform
+* Posting window
+* Link/code
+* Revision process
+* Content retention
+
+---
+
+# 8. Usage Rights
+
+Treat content creation and content usage as separate commercial considerations.
+
+Clarify whether the brand can:
+
+* Repost organically
+* Use on website
+* Use in email
+* Use in paid ads
+* Edit the content
+* Create derivative versions
+* Use on other platforms
+* Use indefinitely or for a defined period
+
+If paid advertising or creator-account amplification is involved, explicitly define:
+
+* Duration
+* Platforms
+* Territory
+* Creative rights
+* Account access/authorization
+* Renewal terms
+
+Never assume paid usage is included in a basic content fee.
+
+---
+
+# 9. Exclusivity
+
+Exclusivity prevents a creator from working with specified competitors for a defined period.
+
+Clarify:
+
+* Which competitors
+* Which category
+* Which geography
+* How long
+* Whether it applies before/after publication
+
+The broader the restriction, the more commercially significant it becomes.
+
+Do not request unnecessary exclusivity.
+
+---
+
+# 10. Negotiation
+
+Do not immediately fight over price.
+
+First understand what the quote includes.
+
+If the creator's rate is above budget, explore:
+
+* Fewer deliverables
+* Different format
+* Shorter usage period
+* No exclusivity
+* Organic-only usage
+* Smaller initial test
+* Performance component
+* Longer-term partnership
+
+Example:
+
+> Thanks — that helps. We're a bit under that budget for the full package. Would you be open to [smaller scope] at [budget]?
+
+Or:
+
+> Is there a version of the collaboration that would work closer to [budget]?
+
+Keep negotiation collaborative.
+
+The goal is to find a workable exchange, not “win” the negotiation.
+
+---
+
+# 11. Creative Brief
+
+Do not write the creator's content word-for-word unless there is a specific legal or operational reason.
+
+Creators understand their audience better than the brand.
+
+Give them:
+
+### The Why
+
+One sentence explaining the problem the product solves.
+
+### Key Talking Points
+
+Usually 2–3 important points.
+
+### CTA
+
+Exactly what the audience should do.
+
+### Guardrails
+
+What must not be claimed or implied.
+
+### Disclosure Requirement
+
+How the commercial relationship must be disclosed.
+
+### Creative Freedom
+
+Explain what is flexible.
+
+A strong brief gives the creator enough information to be accurate without removing their voice.
+
+---
+
+# Creator Content Should Feel Native
+
+Avoid forcing every creator into identical messaging.
+
+The objective is:
+
+**consistent brand truth + creator-native execution.**
+
+Different creators may communicate the same benefit through:
+
+* Storytelling
+* Demonstration
+* Tutorial
+* Review
+* Comparison
+* Humor
+* Personal experience
+* Education
+* Behind-the-scenes content
+
+Let the format match the creator.
+
+---
+
+# Claims & Proof
+
+Every product claim should be supportable.
+
+Never ask a creator to:
+
+* Invent results
+* Exaggerate performance
+* Pretend to be a customer
+* Claim they personally experienced something they didn't
+* Promise an outcome that cannot be supported
+
+Provide approved factual claims and let the creator express them naturally.
+
+---
+
+# 12. Disclosure & Compliance
+
+Treat disclosure as part of campaign design, not an afterthought.
+
+When a creator has a material connection with a brand, determine what disclosure is required based on the relevant jurisdiction, platform, and relationship.
+
+Potentially relevant relationships include:
+
+* Payment
+* Free products
+* Affiliate compensation
+* Discounts or incentives
+* Employment
+* Other material relationships
+
+Disclosures should be clear, noticeable, and appropriate to the platform and format.
+
+Do not assume platform labels alone satisfy every applicable requirement.
+
+For campaigns involving regulated categories, multiple countries, or meaningful legal risk, recommend appropriate legal/compliance review.
+
+Never advise a creator or brand to hide the commercial relationship.
+
+---
+
+# 13. Campaign Tracking
+
+Set up measurement **before launch.**
+
+Useful tools include:
+
+### Unique Codes
+
+One code per creator.
+
+Useful for:
+
+* Sales
+* Attribution
+* Podcasts
+* Video
+* Offline recall
+
+### UTM Links
+
+Use creator-specific links where possible.
+
+Track:
+
+* Sessions
+* Leads
+* Signups
+* Purchases
+
+### Vanity URLs
+
+Useful when links are difficult to click or remember.
+
+### Post-Purchase Surveys
+
+Ask:
+
+> How did you hear about us?
+
+This can capture influence that last-click tracking misses.
+
+### Paid Amplification
+
+When creator content becomes an ad, evaluate the content using paid-media metrics as well as organic metrics.
+
+---
+
+# 14. Measuring ROI
+
+Choose metrics based on the campaign objective.
+
+### Awareness
+
+Possible metrics:
+
+* Reach
+* Qualified impressions
+* Video views
+* Brand searches
+* Audience growth
+
+### Engagement
+
+Possible metrics:
+
+* Meaningful comments
+* Saves
+* Shares
+* Completion rate
+* Conversation quality
+
+### Conversion
+
+Possible metrics:
+
+* Leads
+* Purchases
+* Signups
+* CPA
+* CAC
+* Revenue
+
+### Content
+
+Possible metrics:
+
+* Number of usable assets
+* Cost per usable asset
+* Content quality
+* Ad performance
+* Reusability
+
+Do not use one metric for every campaign.
+
+Reach can matter for awareness.
+
+Revenue can matter for conversion.
+
+Content efficiency can matter for UGC.
+
+Judge performance against the original goal.
+
+---
+
+# 15. Creator Relationships
+
+Do not treat successful creators as disposable placements.
+
+If the relationship works:
+
+* Share results
+* Give useful feedback
+* Pay on time
+* Communicate clearly
+* Offer repeat opportunities
+* Increase responsibility gradually
+* Explore ambassador or long-term partnerships
+
+The second collaboration can be valuable because the creator and audience already understand the brand.
+
+Think:
+
+**transaction → relationship → repeat partnership → ambassador**
+
+---
+
+# Ambassador Programs
+
+Use ambassador programs when ongoing creator relationships make more sense than one-off placements.
+
+### Step 1 — Define the Program
+
+Clarify:
+
+* Who qualifies
+* What they do
+* How often
+* Compensation
+* Benefits
+* Duration
+* Expectations
+
+### Step 2 — Create a Benefits Ladder
+
+Potential benefits:
+
+* Free product
+* Early access
+* Commission
+* Exclusive products
+* Events
+* Recognition
+* Revenue share
+* Private community
+* Paid opportunities
+
+### Step 3 — Recruit From Evidence
+
+Look first for:
+
+* Existing customers
+* Existing advocates
+* Organic mentions
+* Community members
+* Creators already discussing the category
+
+### Step 4 — Equip Them
+
+Provide:
+
+* Links
+* Codes
+* Product information
+* Approved talking points
+* Disclosure guidance
+* Campaign assets
+
+### Step 5 — Activate
+
+Give ambassadors reasons to participate:
+
+* Launches
+* Challenges
+* Events
+* New products
+* Campaigns
+* Community moments
+
+### Step 6 — Measure
+
+Track:
+
+* Traffic
+* Leads
+* Sales
+* Content
+* Engagement
+* Retention
+* Repeat contribution
+
+Then identify which relationships deserve deeper investment.
+
+---
+
+# UGC Creator Programs
+
+UGC creators are not necessarily distribution partners.
+
+Their value may primarily come from **content production**.
+
+Evaluate:
+
+* Camera presence
+* Storytelling
+* Hook quality
+* Product demonstration
+* Editing
+* Authenticity
+* Reliability
+* Creative range
+
+For UGC, prioritize:
+
+**content quality + usage rights + repeatability**
+
+over audience size.
+
+For operational systems and workflow, see [references/ugc-creator-program.md](references/ugc-creator-program.md).
+
+---
+
+# Common Mistakes
+
+Avoid:
+
+* Choosing creators based only on followers
+* Ignoring audience fit
+* Sending generic outreach
+* Treating gifting as guaranteed promotion
+* Over-scripting creators
+* Forgetting usage rights
+* Asking for unlimited rights without discussing value
+* Locking broad exclusivity unnecessarily
+* Launching without tracking
+* Measuring only reach
+* Ignoring disclosure requirements
+* Expecting immediate results
+* Treating creators as interchangeable media inventory
+* Ending successful relationships after one campaign
+
+---
+
+# Campaign Workflow
+
+## Discovery
+
+* Define campaign objective
+* Define target audience
+* Identify creator characteristics
+* Build shortlist
+
+## Vetting
+
+* Audience fit
+* Content fit
+* Trust
+* Commercial history
+* Brand safety
+
+## Outreach
+
+* Personalize
+* Explain fit
+* Explain opportunity
+* Start conversation
+
+## Qualification
+
+* Confirm interest
+* Understand rates
+* Confirm availability
+* Confirm audience/campaign fit
+
+## Negotiation
+
+* Deliverables
+* Compensation
+* Usage
+* Exclusivity
+* Timeline
+
+## Briefing
+
+* Why
+* Talking points
+* CTA
+* Guardrails
+* Disclosure
+* Creative freedom
+
+## Launch
+
+* Tracking
+* Approvals
+* Publishing
+* Disclosure verification
+
+## Measurement
+
+* Compare against campaign goal
+* Analyze qualified outcomes
+* Review content performance
+* Identify strongest creators
+
+## Relationship
+
+* Share results
+* Give feedback
+* Discuss repeat collaboration
+* Consider ambassador relationship
+
+---
+
+# Run-of-Show Checklist
+
+### Strategy
+
+* [ ] Campaign objective defined
+* [ ] Target audience defined
+* [ ] Platform selected
+* [ ] Budget established
+* [ ] Brand-safety constraints defined
+
+### Creator Discovery
+
+* [ ] Audience fit checked
+* [ ] Content fit checked
+* [ ] Engagement quality reviewed
+* [ ] Previous sponsored content reviewed
+* [ ] Brand-safety review completed
+
+### Outreach
+
+* [ ] Message personalized
+* [ ] Specific reason for contacting creator
+* [ ] Opportunity clearly explained
+* [ ] Low-friction CTA used
+
+### Deal
+
+* [ ] Deliverables agreed
+* [ ] Compensation agreed
+* [ ] Timeline agreed
+* [ ] Usage rights agreed
+* [ ] Exclusivity agreed
+* [ ] Payment terms agreed
+* [ ] Disclosure expectations included
 
 ### Execution
-- [ ] Send a brief with the "why," 2–3 talking points, the CTA, and what to avoid
-- [ ] Set up tracking (unique code, UTM, or vanity URL) *before* content goes live
-- [ ] Review the draft if you have approval rights — without over-scripting
-- [ ] Confirm the disclosure actually shipped where viewers can see it
+
+* [ ] Creative brief delivered
+* [ ] Talking points limited to essentials
+* [ ] Creator retains appropriate creative freedom
+* [ ] Tracking established
+* [ ] Disclosure requirements confirmed
 
 ### Post-Campaign
-- [ ] Pull performance against the goal set upfront (cost per qualified outcome)
-- [ ] Share results with the creator — it builds the relationship
-- [ ] Decide: one-off, repeat, or move to a retainer / ambassador program
 
-## Tool Integrations
+* [ ] Performance measured
+* [ ] Results shared
+* [ ] Strong creators identified
+* [ ] Repeat partnership considered
+* [ ] Ambassador opportunity considered
 
-For implementation, see the [tools registry](../../tools/REGISTRY.md).
+---
 
-| Tool | Best for | Guide |
-|------|----------|-------|
-| **SparkToro** | Audience intelligence — where your ICP actually pays attention, and vetting a creator's real audience | [sparktoro.md](../../tools/integrations/sparktoro.md) |
+# How To Handle Creator Conversations
 
-Dedicated creator-discovery/CRM platforms (e.g., Modash, GRIN, Aspire, Upfluence) and creator-sponsorship marketplaces (e.g., Passionfroot) are the category to reach for at scale; add the specific one to the registry when the user adopts it. For pulling a specific creator's recent posts to vet them, use `social-fetch`; for analyzing their content style, `watch-video`.
+When the user gives you a creator or brand message, optimize for the **next natural step**.
 
-## Related Skills
+### New creator
 
-- **referrals** — affiliate/commission tracking and payout rails (the performance side of creator deals)
-- **community-marketing** — community-led advocacy and the unpaid advocate program
-- **ad-creative** — repurpose creator content into paid ads (whitelisting); creative review page for sign-off
-- **cold-outreach** — the creator outreach itself (personalization, deliverability, follow-up)
-- **customer-research** — find existing advocates and ground the talking points
-- **ai-seo** — the branded-search/direct attribution blind spot that hides influencer impact
-- **social** — organic content strategy the partnerships plug into
+Focus on:
+
+**fit + interest**
+
+### Interested creator
+
+Focus on:
+
+**qualification + deal structure**
+
+### Price objection
+
+Focus on:
+
+**scope + value + alternatives**
+
+### Creator asks for details
+
+Give:
+
+**campaign concept + deliverables + compensation + next step**
+
+### Creator ghosts
+
+Use:
+
+**light re-engagement + new reason to respond**
+
+### Creator accepts
+
+Move toward:
+
+**terms → agreement → brief → execution**
+
+### Brand is interested
+
+Move toward:
+
+**campaign concept → deliverables → budget → timeline**
+
+Do not overload the conversation with unnecessary information.
+
+---
+
+# Outreach Integration
+
+For actual outreach copy, use the **cold-outreach** skill.
+
+This skill determines:
+
+* Who to target
+* Why they fit
+* What partnership model makes sense
+* What to offer
+* What information matters
+* How the relationship should progress
+
+The cold-outreach skill determines:
+
+* Opening line
+* Personalization
+* Message structure
+* CTA
+* Follow-ups
+* Objection handling
+* Humanization
+
+The two skills should work together rather than duplicate each other.
+
+---
+
+# Humanization Standard
+
+Before approving any creator or brand outreach, ask:
+
+**Could this have been sent to 100 other people unchanged?**
+
+If yes, rewrite it.
+
+Ask:
+
+**Does the message explain why this specific person makes sense?**
+
+If no, add genuine relevance.
+
+Ask:
+
+**Does it sound like a person rather than a campaign template?**
+
+If no, simplify it.
+
+Ask:
+
+**Is the opportunity clear without becoming a pitch deck?**
+
+If no, reduce it.
+
+---
+
+# Final Principle
+
+Do not optimize influencer marketing for:
+
+**followers, vanity reach, or the biggest name available.**
+
+Optimize for:
+
+**relevance + trust + creative fit + commercial alignment + measurable outcomes + durable relationships.**
+
+The best creator partnership is not necessarily the creator with the largest audience.
+
+It is the partnership where the **right audience hears the right message from someone they already trust — in a way that feels natural.**
