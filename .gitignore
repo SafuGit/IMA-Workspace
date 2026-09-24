@@ -11,3 +11,6 @@ __pycache__/
 # YouTube / Auth cookies
 cookies.txt
 *cookies*.txt
+
+.agents/*
+!.agents/skills/

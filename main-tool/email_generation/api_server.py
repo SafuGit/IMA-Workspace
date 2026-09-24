@@ -82,6 +82,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path in ("/api/nocodb/sync-sent", "/nocodb/sync-sent"):
+            try:
+                from email_generation.cron_worker import sync_sent_outreach_to_nocodb
+                sync_res = sync_sent_outreach_to_nocodb()
+                self._set_headers(200)
+                self.wfile.write(json.dumps(sync_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         # Default info page
         payload = {
             "service": "Fylint Email Generation API",
@@ -135,6 +146,17 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path in ("/api/nocodb/sync-sent", "/nocodb/sync-sent"):
+            try:
+                from email_generation.cron_worker import sync_sent_outreach_to_nocodb
+                sync_res = sync_sent_outreach_to_nocodb()
+                self._set_headers(200)
+                self.wfile.write(json.dumps(sync_res).encode("utf-8"))
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         if self.path not in ("/api/generate-email", "/generate-email"):
             self._set_headers(404)
             self.wfile.write(json.dumps({"error": f"Endpoint not found: {self.path}"}).encode("utf-8"))
@@ -157,13 +179,15 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 return
 
             model = data.get("model", "gemini-3.1-pro-high")
+            mode = data.get("mode", "full")
             channel_id = data.get("channel_id")
             channel_name = data.get("channel_name")
 
-            print(f"\n[API Server] Received generation request for: {video_url} (model: {model})")
+            print(f"\n[API Server] Received generation request for: {video_url} (model: {model}, mode: {mode})")
 
             # Run unified email pipeline
-            result = generate_email_pipeline(video_url, model=model)
+            result = generate_email_pipeline(video_url, model=model, mode=mode)
+            result["mode"] = mode
 
             # Supplement channel details if provided in request
             if channel_id and not result.get("channel_id"):

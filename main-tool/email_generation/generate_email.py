@@ -100,15 +100,81 @@ def _format_transcript_block(transcript: str | None, max_words: int = 2200) -> s
     return transcript
 
 
-def build_agy_prompt(video_data: dict[str, Any]) -> str:
+def build_agy_prompt(video_data: dict[str, Any], mode: str = "full") -> str:
     """
     Construct the comprehensive prompt for agy invoking the relevant skills.
+    Supports mode='full' (default) and mode='hooks_only'.
     """
     title = video_data.get("title", "Untitled Video")
     video_id = video_data.get("video_id", "")
     description = (video_data.get("description") or "")[:1000].strip()
     comments_block = _format_comments_block(video_data.get("comments", []))
     transcript_block = _format_transcript_block(video_data.get("transcript"))
+
+    if mode == "hooks_only":
+        return f"""/video-personalization /safwan-voice /cold-email /spam-word-checker
+
+You are an expert influencer marketer and creator researcher on behalf of Safwan at Fylint (fylint.com).
+Your task is to analyze the video details below and generate:
+1. High-converting personalization hooks (quotes, timestamps, explanation of what happens).
+2. Three tailored, video-specific subject lines (Primary, Alternative 1, Alternative 2).
+
+CRITICAL REQUIREMENT:
+DO NOT generate, outline, or draft full email bodies or outreach drafts. ONLY produce the personalization hooks and subject line options.
+
+TARGET VIDEO DETAILS:
+- Title: {title}
+- Video ID: {video_id}
+- Description: {description or 'N/A'}
+- Top Comments:
+{comments_block}
+
+- Transcript (first 5 minutes):
+{transcript_block}
+
+INSTRUCTIONS:
+
+### Step 1: Find Personalization Hooks
+- Read the timestamped transcript and top comments. Look for a specific, memorable moment that bridges to the creator's value (e.g. how clearly they explain difficult concepts, an opinion their audience strongly agreed with, a unique workflow or aesthetic, a relatable perspective).
+- CRITICAL: Reject throwaway jokes or isolated trivia that cannot logically connect to why sponsors want them.
+- Apply the 'a person would know' filter: avoid dry changelog summaries or deep-cut technical jargon. Pick something a real viewer watching once would actually remember.
+- Cross-check against top comments:
+  - If a top comment reacted to the same moment, tag it [comment-backed].
+  - If only in transcript, tag it [transcript-only].
+- For each of the 2-3 hook candidates, provide:
+  1. The hook copy written in Safwan's voice that naturally bridges into the creator's content value. Tagged `[comment-backed]` or `[transcript-only]`.
+  2. **Timestamp Range**: The exact time range where this occurs based on the [MM:SS] cues in the transcript (e.g. `08:14 – 08:45`).
+  3. **Clickable Link**: Direct URL with timestamp parameter: `https://www.youtube.com/watch?v={video_id}&t={{start_seconds}}s` (convert start MM:SS to total seconds, e.g. 01:26 -> 86s).
+  4. **What happens in this clip**: 1-2 plain, factual sentences describing what the creator physically demonstrates or says at that moment. (Safwan hasn't watched the whole video himself — this gives him instant clarity so he never sounds like he's faking it).
+- State which hook is recommended as the lead and why.
+
+### Step 2: Generate Subject Line Options
+- Subject Lines (Provide 3 completely distinct, video-specific options):
+  - BANNED SALES WORDS: Never use generic agency/sales words like 'sponsorships', 'sponsorship', 'partnerships', 'collab', 'brand deals', 'business inquiry', 'proposal'.
+  - BANNED FILLER TEMPLATES: NEVER use generic canned subject lines ("doing it the hard way", "quick question", "quick thought", "2 mins?"). NEVER put the sender's own name in the subject line!
+  - DYNAMIC GENERATION REQUIREMENT:
+    All 3 subject lines MUST be 100% tailored to the actual video topic, tools, and workflows (2–4 words, all lowercase):
+    * Primary (Tool / Feature Focus): 2–3 words referencing a specific feature, tool, or prompt mechanism demonstrated in the video.
+    * Alternative 1 (Workflow / Demo Focus): 2–3 words referencing the creator's specific workflow or real-world example used in the tutorial.
+    * Alternative 2 (Niche Integration Inquiry): 2–4 words referencing integrations or tools in this specific niche without sales buzzwords.
+
+REMINDER: DO NOT draft any email bodies or full drafts. Stop after Step 2.
+
+Format your response clearly with:
+### 1. Personalization Hooks
+- **Hook 1** `[comment-backed / transcript-only]`: "..."
+  - **Timestamp:** MM:SS – MM:SS
+  - **Video Link:** https://www.youtube.com/watch?v={video_id}&t=...s
+  - **What happens:** ...
+(repeat for Hook 2 & 3)
+
+**Recommendation:** ...
+
+### 2. Subject Line Options
+- **Primary:** ...
+- **Alternative 1:** ...
+- **Alternative 2:** ...
+""".strip()
 
     prompt = f"""/fylint-agency /video-personalization /safwan-voice /cold-email /influencer-marketing /spam-word-checker
 
@@ -264,6 +330,7 @@ def generate_hook_and_email(
     video_data: dict[str, Any],
     model: str = "gemini-3.1-pro-high",
     timeout: int = 180,
+    mode: str = "full",
 ) -> dict[str, Any]:
     """
     Run the hook and email generation via agy subprocess with the specified model.
@@ -272,12 +339,14 @@ def generate_hook_and_email(
         video_data: Video data dictionary from transcript.py (or get_video_data).
         model: Model identifier in agy (default: 'gemini-3.1-pro-high').
         timeout: Subprocess timeout in seconds.
+        mode: Generation mode, either 'full' or 'hooks_only'.
 
     Returns:
         {
             "video_id": str,
             "title": str,
             "model_used": str,
+            "mode": str,
             "raw_output": str,
             "hooks": str,
             "subject_lines": str,
@@ -285,7 +354,7 @@ def generate_hook_and_email(
         }
     """
     agy_exe = _find_agy_executable()
-    prompt = build_agy_prompt(video_data)
+    prompt = build_agy_prompt(video_data, mode=mode)
 
     cmd = [
         agy_exe,
@@ -294,7 +363,7 @@ def generate_hook_and_email(
         "--model", model,
     ]
 
-    print(f"\n[AI] Running Antigravity CLI (agy) with model: {model} …")
+    print(f"\n[AI] Running Antigravity CLI (agy) with model: {model} (mode: {mode}) …")
     output_chunks = []
     try:
         process = subprocess.Popen(
@@ -327,33 +396,48 @@ def generate_hook_and_email(
     subject_section = ""
     email_section = ""
 
-    draft_split = re.split(r"### 3\.\s+Outreach Drafts?", output)
-    if len(draft_split) > 1:
-        email_section = draft_split[1].strip()
-        before_draft = draft_split[0]
-
-        if "### 2. Subject Line Options" in before_draft:
-            parts_2 = before_draft.split("### 2. Subject Line Options")
+    if mode == "hooks_only":
+        if "### 2. Subject Line Options" in output:
+            parts_2 = output.split("### 2. Subject Line Options")
             subject_section = parts_2[1].strip()
             if "### 1. Personalization Hooks" in parts_2[0]:
                 hooks_section = parts_2[0].split("### 1. Personalization Hooks")[1].strip()
             else:
                 hooks_section = parts_2[0].strip()
+        elif "### 1. Personalization Hooks" in output:
+            hooks_section = output.split("### 1. Personalization Hooks")[1].strip()
         else:
-            hooks_section = before_draft.strip()
-    elif "### 1. Personalization Hooks" in output and "### 2. Outreach Draft" in output:
-        parts = output.split("### 2. Outreach Draft")
-        hooks_part = parts[0].split("### 1. Personalization Hooks")[-1]
-        hooks_section = hooks_part.strip()
-        email_section = parts[1].strip()
+            hooks_section = output
+        email_section = ""
     else:
-        hooks_section = output
-        email_section = output
+        draft_split = re.split(r"### 3\.\s+Outreach Drafts?", output)
+        if len(draft_split) > 1:
+            email_section = draft_split[1].strip()
+            before_draft = draft_split[0]
+
+            if "### 2. Subject Line Options" in before_draft:
+                parts_2 = before_draft.split("### 2. Subject Line Options")
+                subject_section = parts_2[1].strip()
+                if "### 1. Personalization Hooks" in parts_2[0]:
+                    hooks_section = parts_2[0].split("### 1. Personalization Hooks")[1].strip()
+                else:
+                    hooks_section = parts_2[0].strip()
+            else:
+                hooks_section = before_draft.strip()
+        elif "### 1. Personalization Hooks" in output and "### 2. Outreach Draft" in output:
+            parts = output.split("### 2. Outreach Draft")
+            hooks_part = parts[0].split("### 1. Personalization Hooks")[-1]
+            hooks_section = hooks_part.strip()
+            email_section = parts[1].strip()
+        else:
+            hooks_section = output
+            email_section = output
 
     return {
         "video_id": video_data.get("video_id", ""),
         "title": video_data.get("title", ""),
         "model_used": model,
+        "mode": mode,
         "raw_output": output,
         "hooks": hooks_section,
         "subject_lines": subject_section,
@@ -442,6 +526,7 @@ def generate_email_pipeline(
     api_url: str | None = None,
     api_key: str | None = None,
     timeout: int = 180,
+    mode: str = "full",
 ) -> dict[str, Any]:
     """
     Unified entrypoint for all 3 calling methods:
@@ -452,10 +537,11 @@ def generate_email_pipeline(
     Returns the fixed output schema dictionary.
     """
     if api_url:
-        print(f"\n[API] Calling external Email Generation API at: {api_url} …")
+        print(f"\n[API] Calling external Email Generation API at: {api_url} (mode: {mode}) …")
         payload = {
             "video_url": f"https://www.youtube.com/watch?v={url_or_id}" if not url_or_id.startswith("http") else url_or_id,
             "model": model,
+            "mode": mode,
         }
         headers = {
             "Content-Type": "application/json",
@@ -474,7 +560,7 @@ def generate_email_pipeline(
         except Exception as e:
             raise RuntimeError(f"Failed to call external API at {api_url}: {e}") from e
 
-    result = run_pipeline(url_or_id, model=model)
+    result = run_pipeline(url_or_id, model=model, mode=mode)
     raw_output = result.get("raw_output", "")
     video_id = result.get("video_id", "")
     parsed = parse_generated_output(raw_output, video_id=video_id)
@@ -485,10 +571,11 @@ def generate_email_pipeline(
         "title": result.get("title", ""),
         "channel_id": result.get("channel_id", ""),
         "channel_name": result.get("channel_name", ""),
+        "mode": mode,
         "hooks": parsed["hooks"],
         "recommendation": parsed.get("recommendation", ""),
         "subject_lines": parsed["subject_lines"],
-        "drafts": parsed["drafts"],
+        "drafts": {} if mode == "hooks_only" else parsed["drafts"],
         "raw_output": raw_output,
         "video_data": {
             "title": result.get("title", ""),
@@ -504,6 +591,7 @@ def generate_email_pipeline(
 def run_pipeline(
     url_or_id: str,
     model: str = "gemini-3.1-pro-high",
+    mode: str = "full",
 ) -> dict[str, Any]:
     """
     End-to-end pipeline:
@@ -517,9 +605,9 @@ def run_pipeline(
     video_data = get_video_data(url_or_id)
 
     # 2. Generate hook and email via agy
-    generation_result = generate_hook_and_email(video_data, model=model)
+    generation_result = generate_hook_and_email(video_data, model=model, mode=mode)
 
-    return {**video_data, **generation_result}
+    return {**video_data, **generation_result, "mode": mode}
 
 
 def _print_pipeline_result(result: dict[str, Any]) -> None:
@@ -527,6 +615,7 @@ def _print_pipeline_result(result: dict[str, Any]) -> None:
     print("\n" + "═" * 60)
     print(f"  TARGET: {result.get('title', 'Unknown')}")
     print(f"  URL   : https://www.youtube.com/watch?v={result.get('video_id', '')}")
+    print(f"  MODE  : {result.get('mode', 'full')}")
     print(f"  SOURCE: {result.get('source', 'unknown')}")
     print("═" * 60 + "\n")
 
@@ -539,6 +628,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fylint YouTube Outreach Pipeline")
     parser.add_argument("url", nargs="?", help="YouTube URL or Video ID")
     parser.add_argument("--model", default="gemini-3.1-pro-high", help="Model name (default: gemini-3.1-pro-high)")
+    parser.add_argument("--mode", default="full", choices=["full", "hooks_only"], help="Generation mode: full or hooks_only")
     parser.add_argument("--api-url", default=None, help="Optional external API URL to delegate generation to")
     parser.add_argument("--api-key", default=None, help="Optional API key for external API")
     parser.add_argument("--json", action="store_true", help="Output result as JSON")
@@ -554,6 +644,7 @@ if __name__ == "__main__":
         model=args.model,
         api_url=args.api_url,
         api_key=args.api_key,
+        mode=args.mode,
     )
 
     if args.json:
