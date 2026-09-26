@@ -14,6 +14,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Find and load .env file if available
+_aikido_env = Path(__file__).resolve().parent.parent / "website" / "aikido-ima" / ".env.local"
+if _aikido_env.exists():
+    load_dotenv(_aikido_env)
+
 for parent in Path(__file__).resolve().parents:
     env_candidate = parent / ".env"
     if env_candidate.exists():

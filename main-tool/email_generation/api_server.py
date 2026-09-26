@@ -157,6 +157,44 @@ class EmailGenerationApiHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
             return
 
+        if self.path in ("/api/generate-followup", "/generate-followup"):
+            try:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body_bytes = self.rfile.read(content_length)
+                data = json.loads(body_bytes.decode("utf-8")) if content_length > 0 else {}
+
+                email_id = data.get("email_id") or data.get("id")
+                thread_data = data.get("thread_data") or data.get("thread_context")
+                cached_video = data.get("cached_video")
+
+                if not email_id and not thread_data:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({"success": False, "error": "Missing required field: 'email_id' or 'thread_data'"}).encode("utf-8"))
+                    return
+
+                stage = int(data.get("stage", 1))
+                feedback = data.get("feedback")
+                model = data.get("model", "gemini-3.1-pro-high")
+
+                from email_generation.followup_generator import generate_followup_pipeline
+                res = generate_followup_pipeline(
+                    email_id=int(email_id) if email_id else None,
+                    stage=stage,
+                    user_feedback=feedback,
+                    model=model,
+                    thread_data=thread_data,
+                    cached_video=cached_video,
+                )
+                self._set_headers(200)
+                self.wfile.write(json.dumps({"success": True, "data": res}, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                import traceback
+                print(f"[API Server Follow-up Error]: {e}")
+                traceback.print_exc()
+                self._set_headers(500)
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+            return
+
         if self.path not in ("/api/generate-email", "/generate-email"):
             self._set_headers(404)
             self.wfile.write(json.dumps({"error": f"Endpoint not found: {self.path}"}).encode("utf-8"))

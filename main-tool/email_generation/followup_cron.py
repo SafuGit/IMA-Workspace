@@ -214,16 +214,46 @@ def check_and_generate_followups(dry_run: bool = False, force: bool = False) -> 
                 existing_draft = r["followup_draft"]
 
                 if not existing_draft or force:
-                    draft_obj = generate_followup_copy(
-                        stage=stage,
-                        creator_name=channel_name,
-                        video_title=video_title,
-                        original_subject="",
-                    )
-                    formatted_draft = f"Subject: {draft_obj['subject']}\n\nBody:\n{draft_obj['body']}"
+                    try:
+                        from email_generation.followup_generator import generate_followup_pipeline
+                        res = generate_followup_pipeline(email_id=r["id"], stage=stage)
+                        rec = res.get("recommended", {})
+                        draft_subj = rec.get("subject", f"Re: {video_title}")
+                        draft_body = rec.get("body", "")
+                        formatted_draft = f"Subject: {draft_subj}\n\nBody:\n{draft_body}"
+                        touch_record = {
+                            "stage": stage,
+                            "title": f"Touch {stage}",
+                            "subject": draft_subj,
+                            "body": draft_body,
+                            "recommended": rec,
+                            "alternative": res.get("alternative"),
+                            "short_version": res.get("short_version"),
+                            "why_this_works": res.get("why_this_works"),
+                            "observation_used": res.get("observation_used"),
+                            "angle_category": res.get("angle_category"),
+                            "generated_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                    except Exception as gen_err:
+                        print(f"  [AI Fallback] Using deterministic fallback for {channel_name}: {gen_err}")
+                        draft_obj = generate_followup_copy(
+                            stage=stage,
+                            creator_name=channel_name,
+                            video_title=video_title,
+                            original_subject="",
+                        )
+                        formatted_draft = f"Subject: {draft_obj['subject']}\n\nBody:\n{draft_obj['body']}"
+                        touch_record = {
+                            "stage": stage,
+                            "title": f"Touch {stage}",
+                            "subject": draft_obj["subject"],
+                            "body": draft_obj["body"],
+                            "recommended": draft_obj,
+                            "generated_at": datetime.now(timezone.utc).isoformat(),
+                        }
 
                     if dry_run:
-                        print(f"  [DRY-RUN] Would generate Stage {stage} draft for {channel_name} ({r['email_address']}): \"{draft_obj['subject']}\"")
+                        print(f"  [DRY-RUN] Would generate Stage {stage} draft for {channel_name} ({r['email_address']}): \"{formatted_draft[:60]}...\"")
                     else:
                         with conn.cursor() as update_cur:
                             update_cur.execute(
@@ -231,10 +261,20 @@ def check_and_generate_followups(dry_run: bool = False, force: bool = False) -> 
                                 UPDATE influencer_emails
                                 SET followup_draft = %s,
                                     followup_generated_at = now(),
+                                    sequence_stage = %s,
+                                    followups = (
+                                        SELECT jsonb_agg(elem)
+                                        FROM (
+                                            SELECT elem FROM jsonb_array_elements(COALESCE(followups, '[]'::jsonb)) elem
+                                            WHERE (elem->>'stage')::int != %s
+                                            UNION ALL
+                                            SELECT %s::jsonb
+                                        ) sub
+                                    ),
                                     updated_at = now()
                                 WHERE id = %s
                                 """,
-                                (formatted_draft, r["id"]),
+                                (formatted_draft, stage, stage, json.dumps(touch_record), r["id"]),
                             )
                         conn.commit()
                         counts["generated"] += 1
